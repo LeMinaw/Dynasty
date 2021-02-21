@@ -1,7 +1,9 @@
 import moderngl
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QSurfaceFormat, QPalette
-from PyQt5.QtWidgets import QOpenGLWidget
+from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
+    QSlider)
+from typing import Callable
 from time import time
 
 from dynasty.renderer import Renderer
@@ -109,3 +111,63 @@ class DynastyViewport(ModernGLWidget, Renderer):
         # Call Qt's update machinery
         super().update()
         self.last_update = time()
+
+
+class LabelSlider(QWidget):
+    """Qt compound widget composed of a slider, a name label and an
+    automaticall updating value label.
+    """
+    def __init__(self,
+            name: str='',
+            start: int=0, end: int=10, default: int=0,
+            *args, **kwargs
+        ):
+        super().__init__(*args, **kwargs)
+        
+        self.slider = QSlider(Qt.Horizontal, self)
+        self.name_label = QLabel(name, self)
+        self.value_label = QLabel('', self)
+
+        grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.addWidget(self.name_label, 0, 0, Qt.AlignLeft)
+        grid.addWidget(self.value_label, 0, 1, Qt.AlignRight)
+        grid.addWidget(self.slider, 1, 0, 1, 2, Qt.AlignVCenter)
+        self.setLayout(grid)
+        self.setMaximumHeight(60)
+
+        self.slider.setRange(start, end)
+        self.slider.valueChanged[int].connect(self.on_value_change)
+        
+        # Trigger dummy value change to initialize with default value
+        self.on_value_change(default)
+    
+    def on_value_change(self, value: int):
+        self.value = value
+        self.value_label.setText(str(value))
+    
+
+class ParamSlider(LabelSlider):
+    """Qt widget to provide numeric parameters input.\n
+    The `callback` argument must be a callable taking one argument. It will be
+    called each time the value of the slider is updated, with the new slider
+    value as argument.\n
+    As Qt sliders can only deal with integer values, a `factor` argument is
+    provided. For exemple, a slider width `start=-2`, `end=4` and `factor=0.1`
+    will output values in the range `[-0.2, 0.4]` with `0.1` step.
+    """
+    def __init__(self,
+            callback: Callable[[float], None] = lambda _: None,
+            factor: float=1,
+            *args, **kwargs
+        ):
+        self.factor = factor
+        self.callback = callback
+
+        super().__init__(*args, **kwargs)
+
+    def on_value_change(self, value: int):
+        value *= self.factor
+
+        super().on_value_change(value)
+        self.callback(value)
