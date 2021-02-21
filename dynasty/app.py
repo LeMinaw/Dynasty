@@ -1,10 +1,10 @@
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
-        QGridLayout, QSlider, QAction)
+        QVBoxLayout, QAction)
 
 from dynasty import APP_DIR, __version__
-from dynasty.widgets import DynastyViewport
+from dynasty.widgets import DynastyViewport, ParamSlider
 
 
 class Application(QApplication):
@@ -20,7 +20,7 @@ class MainWindow(QMainWindow):
         self.resize(900, 600)
         self.statusBar().showMessage("Welcome to Dynasty!")
         
-        viewport = DynastyViewport()
+        viewport = DynastyViewport(self)
         self.setCentralWidget(viewport)
 
         params_dock = ParamsDock(self)
@@ -78,14 +78,19 @@ class ParamsDock(QDockWidget):
         self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
 
         widget = QWidget(self)
-        grid = QGridLayout()
+        layout = QVBoxLayout()
         
         self.setWidget(widget)
-        widget.setLayout(grid)
+        widget.setLayout(layout)
         widget.setMinimumWidth(210)
 
-        slider = QSlider(Qt.Horizontal, self)
-        slider.setRange(-10, 10)
-        slider.setStatusTip("Super slider")
-
-        grid.addWidget(slider, 0, 0)
+        layout.addWidget(ParamSlider(
+            name = "Demo slider",
+            hint = "Wonderful demo slider",
+            start = -10,
+            end = 10,
+            default = 2,
+            callback = lambda x: print(x),
+            factor = .5,
+        ))
+        
