@@ -120,6 +120,7 @@ class LabelSlider(QWidget):
     def __init__(self,
             name: str='',
             start: int=0, end: int=10, default: int=0,
+            hint: str='',
             *args, **kwargs
         ):
         super().__init__(*args, **kwargs)
@@ -138,6 +139,9 @@ class LabelSlider(QWidget):
 
         self.slider.setRange(start, end)
         self.slider.valueChanged[int].connect(self.on_value_change)
+        
+        if hint:
+            self.setStatusTip(hint)
         
         # Trigger dummy value change to initialize with default value
         self.on_value_change(default)
