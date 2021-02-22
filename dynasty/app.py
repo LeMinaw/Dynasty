@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
 
 from dynasty import APP_DIR, __version__
 from dynasty.widgets import DynastyViewport, ParamSlider
+from dynasty.walkers import WalkerSystem, InterLaw, RelModel
 
 
 class Application(QApplication):
@@ -20,7 +21,21 @@ class MainWindow(QMainWindow):
         self.resize(900, 600)
         self.statusBar().showMessage("Welcome to Dynasty!")
         
-        viewport = DynastyViewport(self)
+        self.system = WalkerSystem({
+            'count': 6,
+            'spread': 10,
+            'inter_law': InterLaw.POSITION,
+            'rel_model': RelModel.ONE_TO_ONE,
+            'rel_avg': .02,
+            'rel_var': .03,
+            'iterations': 100
+        })
+        self.system.generate_start_pos()
+        self.system.generate_relation_mask()
+        self.system.generate_relation_matrix()
+        self.system.compute_pos()
+        
+        viewport = DynastyViewport(system=self.system, parent=self)
         self.setCentralWidget(viewport)
 
         params_dock = ParamsDock(self)

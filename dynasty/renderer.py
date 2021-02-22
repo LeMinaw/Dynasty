@@ -6,32 +6,17 @@ from moderngl import LINES_ADJACENCY, BLEND
 
 from dynasty import APP_DIR
 from dynasty.geometry import translation, persp_projection
-
-
-from dynasty.walkers import WalkerSystem, InterLaw, RelModel
-sys = WalkerSystem({
-    'count': 6,
-    'spread': 10,
-    'inter_law': InterLaw.POSITION,
-    'rel_model': RelModel.ONE_TO_ONE,
-    'rel_avg': .02,
-    'rel_var': .03,
-    'iterations': 100
-})
-sys.generate_start_pos()
-sys.generate_relation_mask()
-sys.generate_relation_matrix()
-sys.compute_pos()
+from dynasty.walkers import WalkerSystem
 
 
 class Renderer:
-    """This class implements a context-agnostic ModernGL renderer.\n
+    """This class implements a context-agnostic ModernGL renderer for
+    `WalkerSystem` instances.\n
     Its `ctx` and `screen` attributes must be setup externally to a ModernGL
     context and framebuffer respectively.
     """
-    def __init__(self):
-        super().__init__()
-
+    def __init__(self, system: WalkerSystem):
+        self.system = system
         self.model = np.eye(4, dtype='f4')
         self.view = translation(0, 0, -30)
         self.background_color = (1, 1, 1) # White
@@ -94,9 +79,10 @@ class Renderer:
         #     3, 4, 5, 5
         # ), dtype='u4') # 0-65653
 
-        # sys.positions.shape is (iterations, walkers count, 3)
-        v_count = sys.positions.shape[0] * sys.positions.shape[1]
-        pos = sys.positions.reshape(v_count, 3).astype('f4')
+        pos = self.system.positions
+        # WalkerSystem.positions.shape is (iterations, walkers count, 3)
+        v_count = pos.shape[0] * pos.shape[1]
+        pos = pos.reshape(v_count, 3).astype('f4')
 
         colors = [(30, 100, 255, 130) for _ in range(v_count)]
         colors = np.array(colors, dtype='u1')
