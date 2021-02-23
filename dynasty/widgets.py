@@ -148,7 +148,7 @@ class LabelSlider(QWidget):
     
     def on_value_change(self, value: int):
         self.value = value
-        self.value_label.setText(str(value))
+        self.value_label.setText(str(round(value, 4)))
     
 
 class ParamSlider(LabelSlider):
