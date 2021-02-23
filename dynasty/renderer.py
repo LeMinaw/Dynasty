@@ -18,7 +18,7 @@ class Renderer:
     def __init__(self, system: WalkerSystem):
         self.system = system
         self.model = np.eye(4, dtype='f4')
-        self.view = translation(0, 0, -30)
+        self.view = translation(0, 0, -100)
         self.background_color = (1, 1, 1) # White
 
         self.ctx, self.screen = None, None
