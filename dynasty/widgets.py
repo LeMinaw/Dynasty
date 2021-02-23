@@ -144,7 +144,7 @@ class LabelSlider(QWidget):
             self.setStatusTip(hint)
         
         # Trigger dummy value change to initialize with default value
-        self.on_value_change(default)
+        self.slider.setValue(default)
     
     def on_value_change(self, value: int):
         self.value = value
