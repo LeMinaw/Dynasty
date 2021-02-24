@@ -120,13 +120,13 @@ class Renderer:
         self.rings_idx = np.array(rings_idx, dtype='u4') # 0-65653
 
         # Write data to VBOs and IBOs
-        self.pos_vbo.orphan()
+        self.pos_vbo.clear()
         self.pos_vbo.write(pos)
 
-        self.rings_colors_vbo.orphan()
+        self.rings_colors_vbo.clear()
         self.rings_colors_vbo.write(rings_colors)
 
-        self.rings_ibo.orphan()
+        self.rings_ibo.clear()
         self.rings_ibo.write(self.rings_idx)
 
         # Mark VBOs as updated
