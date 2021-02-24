@@ -1,16 +1,16 @@
 import numpy as np
+from numpy.random import default_rng
 from enum import Enum
 from operator import itemgetter
-from collections.abc import Sequence
+from time import perf_counter_ns
 
 
-def rand_spread_array(shape, avg=0, var=1):
+def rand_spread_array(shape, avg=0, var=1, rng=None):
     """Generate a ndarray with given shape populated with random float
     values in the range ]avg-var, avg+var[.
     """
-    if not isinstance(shape, Sequence):
-        shape = (shape,)
-    return var * (2*np.random.rand(*shape) - 1) + avg
+    rng = rng or default_rng()
+    return var * (2*rng.random(shape) - 1) + avg
 
 
 def diff_array(array):
@@ -41,15 +41,23 @@ class RelModel(Enum):
 
 
 class WalkerSystem:
-    def __init__(self, params={}):
+    def __init__(self, params={}, seed=None):
         self.params = params
 
+        # Use perf_counter_ns for seeding, because time_ns precision is very
+        # poor on some systems - Windows, not to name it
+        self.seed = seed or perf_counter_ns()
+    
     def generate_start_pos(self):
+        rng = default_rng(self.seed)
+        
         # Start pos in ]-1, 1[
-        self.start_pos = rand_spread_array((self.params['count'], 3))
+        self.start_pos = rand_spread_array((self.params['count'], 3), rng=rng)
     
     def generate_relation_mask(self):
         n, model = itemgetter('count', 'rel_model')(self.params)
+
+        rng = default_rng(self.seed + 1)
 
         if model == RelModel.ONE_TO_ONE:
             # One walker is in relation with another
@@ -58,7 +66,7 @@ class WalkerSystem:
         elif model == RelModel.SPARSE:
             # SPARSE is MANY_TO_MANY with only 25% of relations.
             # As the diagonal will be nulled, compensation is needed.
-            self.rel_mask = np.random.rand((n, n)) < (.25 + 1/n)
+            self.rel_mask = rng.random((n, n)) < (.25 + 1/n)
 
         # TODO: Port this relation model
         # elif model == RelModel.ELECTRONIC:
@@ -75,8 +83,10 @@ class WalkerSystem:
 
     def generate_relation_matrix(self):
         n, avg, var = itemgetter('count', 'rel_avg', 'rel_var')(self.params)
+
+        rng = default_rng(self.seed + 2)
         
-        self.rel_matrix = rand_spread_array((n, n), avg, var)
+        self.rel_matrix = rand_spread_array((n, n), avg, var, rng=rng)
         self.rel_matrix *= self.rel_mask
 
     def compute_pos(self):
