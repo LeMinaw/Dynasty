@@ -41,15 +41,17 @@ class RelModel(Enum):
 
 
 class WalkerSystem:
-    def __init__(self, params={}, seed=None):
+    def __init__(self, params={}):
         self.params = params
 
         # Use perf_counter_ns for seeding, because time_ns precision is very
         # poor on some systems - Windows, not to name it
-        self.seed = seed or perf_counter_ns()
+        self.start_pos_seed = perf_counter_ns()
+        self.rel_mask_seed = perf_counter_ns() + 1
+        self.rel_matrix_seed = perf_counter_ns() + 2
     
     def generate_start_pos(self):
-        rng = default_rng(self.seed)
+        rng = default_rng(self.start_pos_seed)
         
         # Start pos in ]-1, 1[
         self.start_pos = rand_spread_array((self.params['count'], 3), rng=rng)
@@ -57,7 +59,7 @@ class WalkerSystem:
     def generate_relation_mask(self):
         n, model = itemgetter('count', 'rel_model')(self.params)
 
-        rng = default_rng(self.seed + 1)
+        rng = default_rng(self.rel_mask_seed)
 
         if model == RelModel.ONE_TO_ONE:
             # One walker is in relation with another
@@ -84,7 +86,7 @@ class WalkerSystem:
     def generate_relation_matrix(self):
         n, avg, var = itemgetter('count', 'rel_avg', 'rel_var')(self.params)
 
-        rng = default_rng(self.seed + 2)
+        rng = default_rng(self.rel_matrix_seed)
         
         self.rel_matrix = rand_spread_array((n, n), avg, var, rng=rng)
         self.rel_matrix *= self.rel_mask
