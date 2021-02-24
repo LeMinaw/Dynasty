@@ -54,6 +54,7 @@ class Renderer:
         self.model = np.eye(4, dtype='f4')
         self.view = translation(0, 0, -100)
         self.background_color = (1, 1, 1) # White
+        self.close_rings = True
 
         self.ctx, self.screen = None, None
 
@@ -116,7 +117,15 @@ class Renderer:
         # Compute vertex indexes
         rings_idx = []
         for chunk in chunks(range(vertex_count), walkers_count):
-            rings_idx += adjacent_lines_indexes(tuple(chunk))
+            verts_idx = list(chunk)
+            # If the ring needs to be closed, a line must be drawn between its
+            # first and last vertices
+            if self.close_rings:
+                verts_idx.append(verts_idx[0])
+            # Convert the list of current ring's vertices to a list with
+            # adjacent segments to be used by GL_LINES_ADJACENCY
+            rings_idx += adjacent_lines_indexes(verts_idx)
+        
         self.rings_idx = np.array(rings_idx, dtype='u4') # 0-65653
 
         # Write data to VBOs and IBOs
