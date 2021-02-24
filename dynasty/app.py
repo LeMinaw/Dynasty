@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
 
 from dynasty import APP_DIR, __version__
 from dynasty.widgets import Viewport, ParamSlider
+from dynasty.interfaces import ViewportInterface
 from dynasty.walkers import WalkerSystem, InterLaw, RelModel
 
 
@@ -33,6 +34,10 @@ class MainWindow(QMainWindow):
         
         viewport = Viewport(system=system, parent=self)
         self.setCentralWidget(viewport)
+
+        self.viewport_interface = ViewportInterface(
+            viewport=viewport, parent=self
+        )
 
         params_dock = ParamsDock(self)
         self.addDockWidget(Qt.LeftDockWidgetArea, params_dock)
