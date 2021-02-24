@@ -8,10 +8,10 @@ Realtime dynamic particles systems visualization
 
 ### By cloning this repository
 
-For now it is the only way to fiddle around whith Dynasty, but that will change
+For now it is the only way to fiddle around with Dynasty, but that will change
 in the future for sure. :)
 
-* Clone this repo the folder of your liking:
+* Clone this repo to the folder of your liking:
 
   ```git clone https://github.com/LeMinaw/Dynasty```
 
@@ -19,7 +19,7 @@ in the future for sure. :)
 
   ```pip install -r requirements.txt```
 
-  **Note:** It is strongly advised to install dependancies in a virtal
+  **Note:** It is strongly advised to install dependancies in a virtual
   environment, isolated from system-wide packages.
 
 * Run the app:
