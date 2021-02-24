@@ -89,6 +89,7 @@ class Viewport(ModernGLWidget, Renderer):
         super().initializeGL()
         # Load GLSL programs from renderer
         self.initialize_program()
+        self.initialize_vertex_buffers()
 
     def paintGL(self):
         """This function will be internally called by Qt when a redraw is
