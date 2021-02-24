@@ -1,8 +1,6 @@
 import numpy as np
-import numpy.lib.recfunctions as rf
 import moderngl
 from itertools import islice, chain
-from time import time
 from moderngl import LINES_ADJACENCY, BLEND
 
 from dynasty import APP_DIR
