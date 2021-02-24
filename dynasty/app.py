@@ -100,13 +100,56 @@ class ParamsDock(QDockWidget):
         widget.setLayout(layout)
         widget.setMinimumWidth(210)
 
+        interface = self.parent().viewport_interface
+
         layout.addWidget(ParamSlider(
-            name = "Demo slider",
-            hint = "Wonderful demo slider",
-            start = -10,
-            end = 10,
-            default = 2,
-            callback = lambda x: print(x),
-            factor = .5,
+            name = "Walkers count",
+            start = 2,
+            end = 40,
+            default = 4,
+            callback = interface.set_count,
+            hint = "Number of interacting walkers"
         ))
-        
+        layout.addWidget(ParamSlider(
+            name = "Walkers spread",
+            start = 1,
+            end = 100,
+            default = 50,
+            callback = interface.set_spread,
+            hint = "Average distance from origin walkers have at start"
+        ))
+        layout.addWidget(ParamSlider(
+            name = "Average attraction",
+            start = -100,
+            end = 100,
+            default = 50,
+            factor = .001,
+            callback = interface.set_rel_avg,
+            hint = ("Average values that binds walkers together. Negative "
+                "value means repulsion, zero means no relation, positive is "
+                "attraction")
+        ))
+        layout.addWidget(ParamSlider(
+            name = "Attraction variance",
+            end = 100,
+            default = 0,
+            factor = .001,
+            callback = interface.set_rel_var,
+            hint = "How random attraction values are. Zero means no random"
+        ))
+        layout.addWidget(ParamSlider(
+            name = "Iterations",
+            start = 1,
+            end = 1000,
+            default = 10,
+            callback = interface.set_iterations,
+            hint = "Number of iterations to compute"
+        ))
+        layout.addWidget(ParamSlider(
+            name = "Rotation speed",
+            end = 100,
+            default = 5,
+            factor = .01,
+            callback = lambda _: None,
+            hint = "Viewport rotation speed"
+        ))
