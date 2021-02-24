@@ -4,7 +4,7 @@ from PyQt5.QtGui import QSurfaceFormat, QPalette
 from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
     QSlider)
 from typing import Callable
-from time import time
+from time import perf_counter
 
 from dynasty.renderer import Renderer
 from dynasty.geometry import rotation
@@ -105,13 +105,13 @@ class Viewport(ModernGLWidget, Renderer):
         """
         # Compute deltatime since last frame
         self.last_update = self.last_update or 0
-        dt = time() - self.last_update
+        dt = perf_counter() - self.last_update
 
         self.model = self.model @ rotation(10*dt, 20*dt, 30*dt)
         
         # Call Qt's update machinery
         super().update()
-        self.last_update = time()
+        self.last_update = perf_counter()
 
 
 class LabelSlider(QWidget):
