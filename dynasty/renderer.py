@@ -21,7 +21,7 @@ def adjacent_lines_indexes(indexes):
         1, 2, 3, 3
     )
     """
-    # assert len(indexes) >= 2
+    assert len(indexes) >= 2
 
     indexes = (indexes[0], *indexes, indexes[-1])
     lines_idx = []
@@ -115,7 +115,7 @@ class Renderer:
 
         # Compute vertex indexes
         rings_idx = []
-        for chunk in chunks(range(vertex_count), iterations):
+        for chunk in chunks(range(vertex_count), walkers_count):
             rings_idx += adjacent_lines_indexes(tuple(chunk))
         self.rings_idx = np.array(rings_idx, dtype='u4') # 0-65653
 
