@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtSlot
+from time import perf_counter_ns
 
 from dynasty.widgets import Viewport
 
@@ -16,6 +17,31 @@ class ViewportInterface(QObject):
     @property
     def system(self):
         return self.viewport.system
+
+    @pyqtSlot()
+    def reseed_start_pos(self):
+        self.system.start_pos_seed = perf_counter_ns()
+        self.system.generate_start_pos()
+        self.system.compute_pos()
+
+        self.viewport.needs_vbo_update = True
+
+    @pyqtSlot()
+    def reseed_rel_mask(self):
+        self.system.rel_mask_seed = perf_counter_ns()
+        self.system.generate_relation_mask()
+        self.system.generate_relation_matrix()
+        self.system.compute_pos()
+
+        self.viewport.needs_vbo_update = True
+
+    @pyqtSlot()
+    def reseed_rel_matrix(self):
+        self.system.rel_matrix_seed = perf_counter_ns()
+        self.system.generate_relation_matrix()
+        self.system.compute_pos()
+
+        self.viewport.needs_vbo_update = True
 
     @pyqtSlot()
     def set_count(self, x):

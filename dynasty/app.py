@@ -1,7 +1,7 @@
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
-        QVBoxLayout, QAction)
+        QVBoxLayout, QGroupBox, QAction, QPushButton)
 
 from dynasty import APP_DIR, __version__
 from dynasty.widgets import Viewport, ParamSlider
@@ -102,7 +102,30 @@ class ParamsDock(QDockWidget):
         widget.setLayout(layout)
         widget.setMinimumWidth(210)
 
+        random_box = QGroupBox("Randomize", self)
+        random_lay = QVBoxLayout(random_box)
+        random_box.setMaximumHeight(200)
+        random_box.setLayout(random_lay)
+        layout.addWidget(random_box)
+
         interface = self.parent().viewport_interface
+
+        btn = QPushButton(text="Start positions", parent=random_box)
+        btn.clicked.connect(interface.reseed_start_pos)
+        btn.setStatusTip("Randomize walkers start positions")
+        random_lay.addWidget(btn)
+
+        btn = QPushButton(text="Relation matrix mask", parent=random_box)
+        btn.clicked.connect(interface.reseed_rel_mask)
+        btn.setStatusTip("Randomize walkers relation matrix mask. Only "
+            "effective when using a mask type involving random")
+        random_lay.addWidget(btn)
+        
+        btn = QPushButton(text="Relation matrix values", parent=random_box)
+        btn.clicked.connect(interface.reseed_rel_matrix)
+        btn.setStatusTip("Randomize walkers relation matrix values. Only "
+            "effective when using a relation matrix involving random")
+        random_lay.addWidget(btn)
 
         layout.addWidget(ParamSlider(
             name = "Walkers count",
