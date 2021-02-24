@@ -10,7 +10,10 @@ from dynasty.walkers import WalkerSystem, InterLaw, RelModel
 
 
 class Application(QApplication):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.setWindowIcon(QIcon(str(APP_DIR / 'res' / 'icon.png')))
 
 
 class MainWindow(QMainWindow):
@@ -18,7 +21,6 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle(f"Dynasty {__version__}")
-        self.setWindowIcon(QIcon(str(APP_DIR / 'res' / 'dynasty.png')))
         self.resize(900, 600)
         self.statusBar().showMessage("Welcome to Dynasty!")
         

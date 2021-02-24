@@ -1,5 +1,7 @@
 # Dynasty
 
+![Dynasty logo](art/logo.png)
+
 Realtime dynamic particles systems visualization
 
 ## Installation
