@@ -62,7 +62,7 @@ class ModernGLWidget(QOpenGLWidget):
         # TODO: self.ctx.fbo.width / self.ctx.fbo.height are not correct ATM
 
 
-class DynastyViewport(ModernGLWidget, Renderer):
+class Viewport(ModernGLWidget, Renderer):
     """3D viewport QT widget for Dynasty, subclassing its custom OpenGL
     context-agnostic renderer.
     """
