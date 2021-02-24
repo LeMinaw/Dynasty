@@ -159,30 +159,3 @@ class Renderer:
             self.compute_vertex_buffers()
 
         self.rings_vao.render(LINES_ADJACENCY)
-
-
-if __name__ == '__main__':
-    import moderngl_window as mglw
-
-    from dynasty.geometry import rotation
-
-
-    class TestWindow(mglw.WindowConfig, Renderer):
-        gl_version = (3, 3)
-        window_size = (900, 600)
-
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.screen = self.ctx.detect_framebuffer()
-            self.initialize_program()
-
-            self.model = np.eye(4, dtype='f4')
-            self.view = translation(0, 0, -30)
-
-        def render(self, time, frametime):
-            dt = frametime
-            self.model = self.model @ rotation(10*dt, 20*dt, 30*dt)
-            self.render_frame()
-
-
-    mglw.run_window_config(TestWindow)
