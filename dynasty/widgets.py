@@ -118,6 +118,9 @@ class Viewport(ModernGLWidget, Renderer):
         self.last_update = perf_counter()
 
     def mouseMoveEvent(self, event):
+        """Perform a rotation and/or translation on the viewport model matrix
+        when mouse is dragged.
+        """
         last_pos = self.last_pos or event.pos()
         dx = event.x() - last_pos.x()
         dy = event.y() - last_pos.y()
@@ -134,6 +137,9 @@ class Viewport(ModernGLWidget, Renderer):
         self.last_pos = event.pos()
 
     def wheelEvent(self, event):
+        """Perform a translation on the viewport view matrix when mouse wheel
+        is scrolled.
+        """
         dy = event.angleDelta().y()
         self.view = self.view @ translation(0, 0, .1*dy)
 
