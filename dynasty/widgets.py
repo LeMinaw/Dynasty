@@ -8,7 +8,7 @@ from typing import Callable
 from time import perf_counter
 
 from dynasty.renderer import Renderer
-from dynasty.geometry import rotation
+from dynasty.geometry import rotation, translation
 
 
 class ModernGLWidget(QOpenGLWidget):
@@ -84,6 +84,7 @@ class Viewport(ModernGLWidget, Renderer):
         self.rotation_speed = np.zeros(3)
 
         self.last_update = None
+        self.last_pos = None
 
     def initializeGL(self):
         """This function will be internaly called by Qt during OpenGL context
@@ -115,6 +116,22 @@ class Viewport(ModernGLWidget, Renderer):
         # Call Qt's update machinery
         super().update()
         self.last_update = perf_counter()
+
+    def mouseMoveEvent(self, event):
+        last_pos = self.last_pos or event.pos()
+        dx = event.x() - last_pos.x()
+        dy = event.y() - last_pos.y()
+
+        # Simple check to avoid "jumping" of the viewport when the mouse is
+        # released, dragged somewhere else then pressed again
+        if abs(dx) < 100 and abs(dy) < 100:
+            if event.buttons() & Qt.LeftButton:    
+                self.model = self.model @ rotation(-.5*dy, -.5*dx, 0)
+        
+            if event.buttons() & Qt.RightButton:
+                self.view = self.view @ translation(.1*dx, -.1*dy, 0)
+
+        self.last_pos = event.pos()
 
 
 class LabelSlider(QWidget):
