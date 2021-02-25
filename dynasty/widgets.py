@@ -133,6 +133,10 @@ class Viewport(ModernGLWidget, Renderer):
 
         self.last_pos = event.pos()
 
+    def wheelEvent(self, event):
+        dy = event.angleDelta().y()
+        self.view = self.view @ translation(0, 0, .1*dy)
+
 
 class LabelSlider(QWidget):
     """Qt compound widget composed of a slider, a name label and an
