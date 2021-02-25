@@ -129,7 +129,7 @@ class Viewport(ModernGLWidget, Renderer):
                 self.model = self.model @ rotation(-.5*dy, -.5*dx, 0)
         
             if event.buttons() & Qt.RightButton:
-                self.view = self.view @ translation(.1*dx, -.1*dy, 0)
+                self.model = self.model @ translation(.1*dx, -.1*dy, 0)
 
         self.last_pos = event.pos()
 
