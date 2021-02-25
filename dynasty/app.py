@@ -1,3 +1,4 @@
+import sys
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
@@ -62,7 +63,7 @@ class MainWindow(QMainWindow):
         exit_act = QAction("Quit", self)
         exit_act.setStatusTip("Exit application")
         exit_act.setShortcut('Ctrl+Q')
-        exit_act.triggered.connect(exit)
+        exit_act.triggered.connect(sys.exit)
 
         view_params_act = params_dock.toggleViewAction()
         view_params_act.setStatusTip("Show/hide parameters palette")
