@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtSlot
+from functools import wraps
 from time import perf_counter_ns
 
 from dynasty.widgets import Viewport
@@ -21,65 +22,55 @@ class ViewportInterface(QObject):
     @pyqtSlot()
     def reseed_start_pos(self):
         self.system.start_pos_seed = perf_counter_ns()
-        self.system.generate_start_pos()
-        self.system.compute_pos()
-
-        self.viewport.needs_vbo_update = True
+        self.update_start_pos()
 
     @pyqtSlot()
     def reseed_rel_mask(self):
         self.system.rel_mask_seed = perf_counter_ns()
-        self.system.generate_relation_mask()
-        self.system.generate_relation_matrix()
-        self.system.compute_pos()
-
-        self.viewport.needs_vbo_update = True
+        self.update_rel_mask()
 
     @pyqtSlot()
     def reseed_rel_matrix(self):
         self.system.rel_matrix_seed = perf_counter_ns()
-        self.system.generate_relation_matrix()
-        self.system.compute_pos()
-
-        self.viewport.needs_vbo_update = True
+        self.update_rel_matrix()
 
     @pyqtSlot()
     def set_count(self, x):
         self.system.params['count'] = x
-        self.system.generate_start_pos()
-        self.system.generate_relation_mask()
-        self.system.generate_relation_matrix()
-        self.system.compute_pos()
-
-        self.viewport.needs_vbo_update = True
+        self.update_start_pos()
 
     @pyqtSlot()
     def set_spread(self, x):
         self.system.params['spread'] = x
-        self.system.compute_pos()
-
-        self.viewport.needs_vbo_update = True
+        self.update_pos()
     
     @pyqtSlot()
     def set_rel_avg(self, x):
         self.system.params['rel_avg'] = x
-        self.system.generate_relation_matrix()
-        self.system.compute_pos()
-
-        self.viewport.needs_vbo_update = True
+        self.update_rel_matrix()
     
     @pyqtSlot()
     def set_rel_var(self, x):
         self.system.params['rel_var'] = x
-        self.system.generate_relation_matrix()
-        self.system.compute_pos()
-
-        self.viewport.needs_vbo_update = True
+        self.update_rel_matrix()
 
     @pyqtSlot()
     def set_iterations(self, x):
         self.system.params['iterations'] = x
+        self.update_pos()
+    
+    def update_start_pos(self):
+        self.system.generate_start_pos()
+        self.update_rel_mask()
+    
+    def update_rel_mask(self):
+        self.system.generate_relation_mask()
+        self.update_rel_matrix()
+    
+    def update_rel_matrix(self):
+        self.system.generate_relation_matrix()
+        self.update_pos()
+    
+    def update_pos(self):
         self.system.compute_pos()
-
         self.viewport.needs_vbo_update = True
-        
