@@ -1,4 +1,5 @@
 import moderngl
+import numpy as np
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QSurfaceFormat, QPalette
 from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
@@ -80,6 +81,8 @@ class Viewport(ModernGLWidget, Renderer):
         timer.timeout.connect(self.update)
         timer.start(1000/60) # 60 FPS
 
+        self.rotation_speed = np.zeros(3)
+
         self.last_update = None
 
     def initializeGL(self):
@@ -105,9 +108,9 @@ class Viewport(ModernGLWidget, Renderer):
         """
         # Compute deltatime since last frame
         self.last_update = self.last_update or 0
-        dt = perf_counter() - self.last_update
+        dt = (perf_counter() - self.last_update)
 
-        self.model = self.model @ rotation(10*dt, 20*dt, 30*dt)
+        self.model = self.model @ rotation(*(dt * self.rotation_speed))
         
         # Call Qt's update machinery
         super().update()

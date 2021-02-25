@@ -58,6 +58,18 @@ class ViewportInterface(QObject):
     def set_iterations(self, x):
         self.system.params['iterations'] = x
         self.update_pos()
+
+    @pyqtSlot()
+    def set_x_rot_speed(self, x):
+        self.viewport.rotation_speed[0] = x
+
+    @pyqtSlot()
+    def set_y_rot_speed(self, x):
+        self.viewport.rotation_speed[1] = x
+
+    @pyqtSlot()
+    def set_z_rot_speed(self, x):
+        self.viewport.rotation_speed[2] = x
     
     def update_start_pos(self):
         self.system.generate_start_pos()
