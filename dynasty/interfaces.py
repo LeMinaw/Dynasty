@@ -34,40 +34,40 @@ class ViewportInterface(QObject):
         self.system.rel_matrix_seed = perf_counter_ns()
         self.update_rel_matrix()
 
-    @pyqtSlot()
+    @pyqtSlot(int)
     def set_count(self, x):
         self.system.params['count'] = x
         self.update_start_pos()
 
-    @pyqtSlot()
+    @pyqtSlot(float)
     def set_spread(self, x):
         self.system.params['spread'] = x
         self.update_pos()
     
-    @pyqtSlot()
+    @pyqtSlot(float)
     def set_rel_avg(self, x):
         self.system.params['rel_avg'] = x
         self.update_rel_matrix()
     
-    @pyqtSlot()
+    @pyqtSlot(float)
     def set_rel_var(self, x):
         self.system.params['rel_var'] = x
         self.update_rel_matrix()
 
-    @pyqtSlot()
+    @pyqtSlot(int)
     def set_iterations(self, x):
         self.system.params['iterations'] = x
         self.update_pos()
 
-    @pyqtSlot()
+    @pyqtSlot(float)
     def set_x_rot_speed(self, x):
         self.viewport.rotation_speed[0] = x
 
-    @pyqtSlot()
+    @pyqtSlot(float)
     def set_y_rot_speed(self, x):
         self.viewport.rotation_speed[1] = x
 
-    @pyqtSlot()
+    @pyqtSlot(float)
     def set_z_rot_speed(self, x):
         self.viewport.rotation_speed[2] = x
     
