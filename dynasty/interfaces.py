@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtSlot
+from PyQt5.QtGui import QColor
 from functools import wraps
 from time import perf_counter_ns
 
@@ -70,6 +71,12 @@ class ViewportInterface(QObject):
     @pyqtSlot(float)
     def set_z_rot_speed(self, x):
         self.viewport.rotation_speed[2] = x
+    
+    @pyqtSlot(QColor)
+    def set_background_color(self, color):
+        self.viewport.background_color = tuple(
+            getattr(color, c)() / 255 for c in ('red', 'green', 'blue')
+        )
     
     def update_start_pos(self):
         self.system.generate_start_pos()
