@@ -1,8 +1,8 @@
 import sys
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
-        QVBoxLayout, QGroupBox, QAction, QPushButton)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QColorDialog, QWidget,
+        QDockWidget, QVBoxLayout, QGroupBox, QAction, QPushButton)
 
 from dynasty import APP_DIR, __version__
 from dynasty.widgets import Viewport, ParamSlider
@@ -219,3 +219,21 @@ class ViewParamsDock(ParamsDock):
             callback = self.interface.set_z_rot_speed,
             hint = "Viewport rotation speed around Z axis"
         ))
+
+        bck_dialog = BackgroundColorDialog(self)
+
+        btn = QPushButton(text="Background color", parent=self)
+        btn.clicked.connect(bck_dialog.show)
+        btn.setStatusTip("Set the background color of the viewport")
+        self.layout.addWidget(btn)
+
+
+class BackgroundColorDialog(QColorDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        self.setWindowTitle("Background color")
+        self.setOption(QColorDialog.NoButtons, True)
+    
+        interface = self.parent().interface
+        self.currentColorChanged.connect(interface.set_background_color)
