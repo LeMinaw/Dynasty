@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
         export_act = QAction("Export raster...", self)
         export_act.setStatusTip("Export viewport as raster file")
         export_act.setShortcut('Ctrl+E')
-        export_act.triggered.connect(self.not_implemented)
+        export_act.triggered.connect(viewport.saveFramebuffer)
 
         menubar = self.menuBar()
         file_menu = menubar.addMenu("File")

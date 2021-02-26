@@ -1,11 +1,11 @@
 import moderngl
 import numpy as np
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QSurfaceFormat, QPalette
+from PyQt5.QtCore import Qt, QTimer, pyqtSlot
+from PyQt5.QtGui import QSurfaceFormat, QPalette, QImage
 from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
     QSlider)
 from typing import Callable
-from time import perf_counter
+from time import perf_counter, strftime
 
 from dynasty.renderer import Renderer
 from dynasty.geometry import rotation, translation
@@ -142,6 +142,27 @@ class Viewport(ModernGLWidget, Renderer):
         """
         dy = event.angleDelta().y()
         self.view = self.view @ translation(0, 0, .1*dy)
+
+    @pyqtSlot()
+    def saveFramebuffer(self):
+        """Save the current viewport framebuffer to a raster image file, in
+        both PNG and JPEG formats. Exported files resolution is twice the
+        current viewport resolution (aspect ratio is therefore preserved).
+        """
+        size = self.size()
+        self.resize(size * 2);
+        
+        image = self.grabFramebuffer()
+        # This reinterpret is needed in orther to fix a strange Qt bug when
+        # exporting in any other format than JPEG, where the colors channels
+        # seem mixed up weirdly
+        image.reinterpretAsFormat(QImage.Format_ARGB32)
+        filename = strftime('%Y-%m-%d_%H-%M-%S')
+        image.save(filename + '.jpg', 'jpg', 100)
+        image.save(filename + '.png', 'png')
+        
+        self.parent().statusBar().showMessage("Raster saved as " + filename)
+        self.resize(size)
 
 
 class LabelSlider(QWidget):
