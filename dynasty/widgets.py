@@ -1,11 +1,11 @@
 import moderngl
 import numpy as np
-from PyQt5.QtCore import Qt, QTimer, pyqtSlot
-from PyQt5.QtGui import QSurfaceFormat, QPalette, QImage
-from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
-    QSlider)
 from typing import Callable
 from time import perf_counter, strftime
+from PyQt5.QtCore import Qt, QTimer, pyqtSlot
+from PyQt5.QtGui import QSurfaceFormat, QImage
+from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
+    QSlider)
 
 from dynasty.renderer import Renderer
 from dynasty.geometry import rotation, translation
@@ -17,7 +17,7 @@ class ModernGLWidget(QOpenGLWidget):
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.screen = None
         self.ctx = None
 
@@ -50,7 +50,7 @@ class ModernGLWidget(QOpenGLWidget):
         # performing OpenGL calls
         # This is useful in many cases, eg. to fix framebuffer clearing
         self.screen.use()
-    
+
     def resizeGL(self, w: int, h: int):
         """This function will be internally called by Qt when the widget is
         resized.
@@ -69,7 +69,7 @@ class Viewport(ModernGLWidget, Renderer):
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         fmt = QSurfaceFormat()
         fmt.setVersion(3, 3)
         fmt.setProfile(QSurfaceFormat.CoreProfile)
@@ -112,7 +112,7 @@ class Viewport(ModernGLWidget, Renderer):
         dt = (perf_counter() - self.last_update)
 
         self.model = self.model @ rotation(*(dt * self.rotation_speed))
-        
+
         # Call Qt's update machinery
         super().update()
         self.last_update = perf_counter()
@@ -130,7 +130,7 @@ class Viewport(ModernGLWidget, Renderer):
         if abs(dx) < 100 and abs(dy) < 100:
             if event.buttons() & Qt.LeftButton:    
                 self.model = self.model @ rotation(-.5*dy, -.5*dx, 0)
-        
+
             if event.buttons() & Qt.RightButton:
                 self.model = self.model @ translation(.1*dx, -.1*dy, 0)
 
@@ -150,8 +150,8 @@ class Viewport(ModernGLWidget, Renderer):
         current viewport resolution (aspect ratio is therefore preserved).
         """
         size = self.size()
-        self.resize(size * 2);
-        
+        self.resize(size * 2)
+
         image = self.grabFramebuffer()
         # This reinterpret is needed in orther to fix a strange Qt bug when
         # exporting in any other format than JPEG, where the colors channels
@@ -160,7 +160,7 @@ class Viewport(ModernGLWidget, Renderer):
         filename = strftime('%Y-%m-%d_%H-%M-%S')
         image.save(filename + '.jpg', 'jpg', 100)
         image.save(filename + '.png', 'png')
-        
+
         self.parent().statusBar().showMessage("Raster saved as " + filename)
         self.resize(size)
 
@@ -176,7 +176,7 @@ class LabelSlider(QWidget):
             *args, **kwargs
         ):
         super().__init__(*args, **kwargs)
-        
+
         self.slider = QSlider(Qt.Horizontal, self)
         self.name_label = QLabel(name, self)
         self.value_label = QLabel('', self)
@@ -191,17 +191,17 @@ class LabelSlider(QWidget):
 
         self.slider.setRange(start, end)
         self.slider.valueChanged[int].connect(self.on_value_change)
-        
+
         if hint:
             self.setStatusTip(hint)
-        
+
         # Trigger dummy value change to initialize with default value
         self.slider.setValue(default)
-    
+
     def on_value_change(self, value: int):
         self.value = value
         self.value_label.setText(str(round(value, 4)))
-    
+
 
 class ParamSlider(LabelSlider):
     """Qt widget to provide numeric parameters input.\n

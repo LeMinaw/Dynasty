@@ -1,7 +1,6 @@
+from time import perf_counter_ns
 from PyQt5.QtCore import QObject, pyqtSlot
 from PyQt5.QtGui import QColor
-from functools import wraps
-from time import perf_counter_ns
 
 from dynasty.widgets import Viewport
 
@@ -13,7 +12,7 @@ class ViewportInterface(QObject):
     """
     def __init__(self, viewport: Viewport, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.viewport = viewport
 
     @property
@@ -44,12 +43,12 @@ class ViewportInterface(QObject):
     def set_spread(self, x):
         self.system.params['spread'] = x
         self.update_pos()
-    
+
     @pyqtSlot(float)
     def set_rel_avg(self, x):
         self.system.params['rel_avg'] = x
         self.update_rel_matrix()
-    
+
     @pyqtSlot(float)
     def set_rel_var(self, x):
         self.system.params['rel_var'] = x
@@ -71,25 +70,25 @@ class ViewportInterface(QObject):
     @pyqtSlot(float)
     def set_z_rot_speed(self, x):
         self.viewport.rotation_speed[2] = x
-    
+
     @pyqtSlot(QColor)
     def set_background_color(self, color):
         self.viewport.background_color = tuple(
             getattr(color, c)() / 255 for c in ('red', 'green', 'blue')
         )
-    
+
     def update_start_pos(self):
         self.system.generate_start_pos()
         self.update_rel_mask()
-    
+
     def update_rel_mask(self):
         self.system.generate_relation_mask()
         self.update_rel_matrix()
-    
+
     def update_rel_matrix(self):
         self.system.generate_relation_matrix()
         self.update_pos()
-    
+
     def update_pos(self):
         self.system.compute_pos()
         self.viewport.needs_vbo_update = True

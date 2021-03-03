@@ -1,10 +1,10 @@
 import numpy as np
-import moderngl
 from itertools import islice, chain
 from moderngl import LINES_ADJACENCY, BLEND
 
 from dynasty import APP_DIR
 from dynasty.geometry import translation, persp_projection
+from dynasty.colors import BLACK_TO_RED
 from dynasty.walkers import WalkerSystem
 
 
@@ -39,7 +39,7 @@ def chunks(iterable, n):
         except StopIteration:
             return
         yield chain((first,), chunk)
-    
+
 
 class Renderer:
     """This class implements a context-agnostic ModernGL renderer for
@@ -53,6 +53,7 @@ class Renderer:
         self.view = translation(0, 0, -100)
         self.background_color = (1, 1, 1) # White
         self.close_rings = True
+        self.rings_gradient = BLACK_TO_RED
 
         self.ctx, self.screen = None, None
 
@@ -64,16 +65,16 @@ class Renderer:
 
         with (APP_DIR / 'lines.gs.glsl').open() as prog_file:
             gs_prog = prog_file.read()
-        
+
         with (APP_DIR / 'lines.fs.glsl').open() as prog_file:
             fs_prog = prog_file.read()
-        
+
         self.prog = self.ctx.program(
             vertex_shader = vs_prog,
             geometry_shader = gs_prog,
             fragment_shader = fs_prog
         )
-    
+
     def initialize_vertex_buffers(self):
         # 4 bytes, 3 coordinates, 40 walkers, 1000 iterations
         self.pos_vbo = self.ctx.buffer(reserve=4 * 3 * 40 * 1000)
@@ -97,7 +98,7 @@ class Renderer:
         self.rings_vao = self.ctx.vertex_array(
             self.prog, rings_content, self.rings_ibo
         )
-    
+
     def compute_vertex_buffers(self):
         # Retrieve walkers system computed positions, in shape (iterations,
         # walkers count, 3)
@@ -105,12 +106,9 @@ class Renderer:
         iterations, walkers_count, _ = pos.shape
         vertex_count = iterations * walkers_count
         pos = pos.reshape(vertex_count, 3).astype('f4')
-        
+
         # Compute vertex colors
-        rings_colors = [
-            (i/vertex_count*255, 0, 0, 32) for i in range(vertex_count)
-        ]
-        rings_colors = np.array(rings_colors, dtype='u1')
+        rings_colors = self.rings_gradient.generate(vertex_count).astype('u1')
 
         # Compute vertex indexes
         rings_idx = []
@@ -123,7 +121,7 @@ class Renderer:
             # Convert the list of current ring's vertices to a list with
             # adjacent segments to be used by GL_LINES_ADJACENCY
             rings_idx += adjacent_lines_indexes(verts_idx)
-        
+
         self.rings_idx = np.array(rings_idx, dtype='u4') # 0-65653
 
         # Write data to VBOs and IBOs
@@ -152,7 +150,7 @@ class Renderer:
         self.prog['projection'].write(self.projection)
         self.prog['viewport'] = width, height
         self.prog['width'] = 3.0
-        
+
         if self.needs_vbo_update:
             self.compute_vertex_buffers()
 

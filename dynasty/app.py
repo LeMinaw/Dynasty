@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QColorDialog, QWidget,
         QDockWidget, QVBoxLayout, QGroupBox, QAction, QPushButton)
@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"Dynasty {__version__}")
         self.resize(900, 600)
         self.statusBar().showMessage("Welcome to Dynasty!")
-        
+
         system = WalkerSystem({
             'count': 6,
             'spread': 10,
@@ -34,7 +34,7 @@ class MainWindow(QMainWindow):
             'rel_var': .03,
             'iterations': 100
         })
-        
+
         viewport = Viewport(system=system, parent=self)
         self.setCentralWidget(viewport)
 
@@ -96,7 +96,7 @@ class MainWindow(QMainWindow):
 
     def not_implemented(self):
         self.statusBar().showMessage("Not implemented!")
-    
+
 
 class ParamsDock(QDockWidget):
     def __init__(self, name='', *args, **kwargs):
@@ -107,7 +107,7 @@ class ParamsDock(QDockWidget):
 
         widget = QWidget(self)
         self.layout = QVBoxLayout()
-        
+
         self.setWidget(widget)
         widget.setLayout(self.layout)
         widget.setMinimumWidth(210)
@@ -135,7 +135,7 @@ class SimParamsDock(ParamsDock):
         btn.setStatusTip("Randomize walkers relation matrix mask. Only "
             "effective when using a mask type involving random")
         random_lay.addWidget(btn)
-        
+
         btn = QPushButton(text="Relation matrix values", parent=random_box)
         btn.clicked.connect(self.interface.reseed_rel_matrix)
         btn.setStatusTip("Randomize walkers relation matrix values. Only "
@@ -231,9 +231,9 @@ class ViewParamsDock(ParamsDock):
 class BackgroundColorDialog(QColorDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.setWindowTitle("Background color")
         self.setOption(QColorDialog.NoButtons, True)
-    
+
         interface = self.parent().interface
         self.currentColorChanged.connect(interface.set_background_color)

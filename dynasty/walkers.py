@@ -49,13 +49,13 @@ class WalkerSystem:
         self.start_pos_seed = perf_counter_ns()
         self.rel_mask_seed = perf_counter_ns() + 1
         self.rel_matrix_seed = perf_counter_ns() + 2
-    
+
     def generate_start_pos(self):
         rng = default_rng(self.start_pos_seed)
-        
+
         # Start pos in ]-1, 1[
         self.start_pos = rand_spread_array((self.params['count'], 3), rng=rng)
-    
+
     def generate_relation_mask(self):
         n, model = itemgetter('count', 'rel_model')(self.params)
 
@@ -64,7 +64,7 @@ class WalkerSystem:
         if model == RelModel.ONE_TO_ONE:
             # One walker is in relation with another
             self.rel_mask = np.roll(np.eye(n, dtype=bool), 1, axis=1)
-        
+
         elif model == RelModel.SPARSE:
             # SPARSE is MANY_TO_MANY with only 25% of relations.
             # As the diagonal will be nulled, compensation is needed.
@@ -87,7 +87,7 @@ class WalkerSystem:
         n, avg, var = itemgetter('count', 'rel_avg', 'rel_var')(self.params)
 
         rng = default_rng(self.rel_matrix_seed)
-        
+
         self.rel_matrix = rand_spread_array((n, n), avg, var, rng=rng)
         self.rel_matrix *= self.rel_mask
 
@@ -97,9 +97,9 @@ class WalkerSystem:
 
         pos = self.start_pos * self.params['spread']
         vel = np.zeros_like(pos)
-        
+
         positions = []
-        for i in range(self.params['iterations']):
+        for _ in range(self.params['iterations']):
             positions.append(pos.copy())
 
             if law == InterLaw.POSITION:
@@ -114,7 +114,7 @@ class WalkerSystem:
                 # Alg that does not uses attraction directly but variances
                 # between attraction values as position modulation.
                 pos += rels @ pos - (pos.T @ rels).T
-            
+
             else:
                 forces = diff_array(pos) # Distance between all walkers locations
                 # TODO: Port an test those laws
