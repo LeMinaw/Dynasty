@@ -190,7 +190,7 @@ class LabelSlider(QWidget):
         self.setMaximumHeight(60)
 
         self.slider.setRange(start, end)
-        self.slider.valueChanged[int].connect(self.on_value_change)
+        self.slider.valueChanged.connect(self.on_value_change)
 
         if hint:
             self.setStatusTip(hint)
