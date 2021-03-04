@@ -1,5 +1,6 @@
+from __future__ import annotations
 import numpy as np
-from typing import Tuple, Union
+from typing import Tuple, Union, Iterable
 from sortedcontainers import SortedDict
 
 
@@ -10,7 +11,7 @@ RGBAColor = Tuple[int, int, int, int]
 Color = Union[RGBColor, RGBAColor]
 
 
-def all_equals(iterable):
+def all_equals(iterable: Iterable) -> bool:
     """Return True if all elements of a given `iterable` are equals, otherwise
     return False.
     """
@@ -33,7 +34,7 @@ class Gradient(SortedDict):
     and ending with blue.
     """
     @property
-    def channels(self):
+    def channels(self) -> Union[int, None]:
         """Number of color channels the gradient stops have.\n
         Return `None` if the gradient if empty."""
         # Check all colors have the same number of channels
@@ -44,7 +45,7 @@ class Gradient(SortedDict):
         return len(self.peekitem()[1]) # Length of last color stop value
 
     @property
-    def endpoints(self):
+    def endpoints(self) -> Gradient:
         """Return a new `Gradient` containing only the first and last color
         stops of the current gradient.\n
         Return an empty `Gradient` if current gradient is empty.
@@ -53,7 +54,7 @@ class Gradient(SortedDict):
             return type(self)()
         return type(self)((self.peekitem(0), self.peekitem()))
 
-    def generate(self, steps=10):
+    def generate(self, steps:int =10) -> np.ndarray:
         """Generates a an array of `steps` colors from the gradient.\n
         First array axis correponds to colors steps, second to color channels.
         """
