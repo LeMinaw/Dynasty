@@ -345,27 +345,11 @@ class GradientEditor(QWidget):
         position (in the range [0, 1]), otherwise return None.
         """
         pos = self.normalizePos(event.x())
-
-        # Get the positions of the previous and next color stops
-        index = self.gradient.bisect(pos)
-        try:
-            prev_pos = self.gradient.peekitem(index-1)[0]
-        except IndexError:
-            prev_pos = float('-inf')
-        try:
-            next_pos = self.gradient.peekitem(index)[0]
-        except IndexError:
-            next_pos = float('inf')
-
-        # Get the nearest post
-        if abs(prev_pos - pos) < abs(next_pos - pos):
-            nearest_pos = prev_pos
-        else:
-            nearest_pos = next_pos
+        nearestPos = self.gradient.nearest_stop(pos)[0]
 
         # Only return color stop position if it is nearly enough to the event
-        if abs(nearest_pos - pos) * self.width() < 6:
-            return nearest_pos
+        if abs(nearestPos - pos) * self.width() < 6:
+            return nearestPos
 
     def normalizePos(self, pos: float) -> float:
         """Converts a color stop position from screen space to "gradient"
