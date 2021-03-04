@@ -55,6 +55,7 @@ class ModernGLWidget(QOpenGLWidget):
         """This function will be internally called by Qt when the widget is
         resized.
         """
+        # pylint: disable = unused-argument
         # According to Qt docs, gets called after makeCurrent() and the
         # framebuffer is bound
         self.screen = self.ctx.detect_framebuffer(
@@ -128,7 +129,7 @@ class Viewport(ModernGLWidget, Renderer):
         # Simple check to avoid "jumping" of the viewport when the mouse is
         # released, dragged somewhere else then pressed again
         if abs(dx) < 100 and abs(dy) < 100:
-            if event.buttons() & Qt.LeftButton:    
+            if event.buttons() & Qt.LeftButton:
                 self.model = self.model @ rotation(-.5*dy, -.5*dx, 0)
 
             if event.buttons() & Qt.RightButton:
@@ -230,6 +231,7 @@ class ParamSlider(LabelSlider):
 
 
 class ColorDialog(QColorDialog):
+    """Slight variation of Qt's default color dialog."""
     def __init__(self, *args, alpha=False, **kwargs):
         super().__init__(*args, **kwargs)
 
