@@ -361,9 +361,9 @@ class GradientEditor(QWidget):
     def setColorStop(self, pos: float, color: Union[Color, None]=None):
         """Set the color of the gradient at a given position.\n
         If no color stop exists at this position, one will be created. If no
-        color is specified, the last color of the gradient will be used.
+        color is specified, the nearest color of the gradient will be used.
         """
-        self.gradient[pos] = color or self.gradient.peekitem()[1]
+        self.gradient[pos] = color or self.gradient.nearest_stop(pos)[1]
         self.gradientChanged.emit()
         self.update()
 
