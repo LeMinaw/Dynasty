@@ -34,7 +34,7 @@ class Gradient(SortedDict):
     and ending with blue.
     """
     @property
-    def channels(self) -> Union[int, None]:
+    def channels(self) -> int | None:
         """Number of color channels the gradient stops have.\n
         Return `None` if the gradient if empty."""
         # Check all colors have the same number of channels
@@ -54,7 +54,7 @@ class Gradient(SortedDict):
             return type(self)()
         return type(self)((self.peekitem(0), self.peekitem()))
 
-    def generate(self, steps:int =10) -> np.ndarray:
+    def generate(self, steps: int=10) -> np.ndarray:
         """Generates a an array of `steps` colors from the gradient.\n
         First array axis correponds to colors steps, second to color channels.
         """
