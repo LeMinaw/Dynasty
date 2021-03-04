@@ -384,11 +384,16 @@ class GradientEditor(QWidget):
         self.update()
 
     def removeColorStop(self, pos: float):
-        """Remove a the color stop at position `pos` from the gradient.\n
+        """Remove the color stop at position `pos` from the gradient.\n
         Removing the first or last color stop is not allowed and will be no-op.
         """
         if pos not in self.gradient.endpoints.keys():
             del self.gradient[pos]
+
+            # If the currently selected pos was deleted, select the nearest one
+            if self.selectedPos == pos:
+                self.selectedPos = self.gradient.nearest_stop(pos)[0]
+
             self.gradientChanged.emit()
             self.update()
 
