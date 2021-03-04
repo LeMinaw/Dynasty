@@ -5,7 +5,7 @@ from time import perf_counter, strftime
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot
 from PyQt5.QtGui import QSurfaceFormat, QImage
 from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
-    QSlider)
+    QSlider, QColorDialog)
 
 from dynasty.renderer import Renderer
 from dynasty.geometry import rotation, translation
@@ -227,3 +227,11 @@ class ParamSlider(LabelSlider):
 
         super().on_value_change(value)
         self.callback(value)
+
+
+class ColorDialog(QColorDialog):
+    def __init__(self, *args, alpha=False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.setOption(QColorDialog.NoButtons, True)
+        self.setOption(QColorDialog.ShowAlphaChannel, alpha)

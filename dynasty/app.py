@@ -1,11 +1,11 @@
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QColorDialog, QWidget,
-        QDockWidget, QVBoxLayout, QGroupBox, QAction, QPushButton)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
+        QVBoxLayout, QGroupBox, QAction, QPushButton)
 
 from dynasty import APP_DIR, __version__
-from dynasty.widgets import Viewport, ParamSlider
+from dynasty.widgets import Viewport, ParamSlider, ColorDialog
 from dynasty.interfaces import ViewportInterface
 from dynasty.walkers import WalkerSystem, InterLaw, RelModel
 
@@ -228,12 +228,11 @@ class ViewParamsDock(ParamsDock):
         self.layout.addWidget(btn)
 
 
-class BackgroundColorDialog(QColorDialog):
+class BackgroundColorDialog(ColorDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.setWindowTitle("Background color")
-        self.setOption(QColorDialog.NoButtons, True)
 
         interface = self.parent().interface
         self.currentColorChanged.connect(interface.set_background_color)
