@@ -10,6 +10,8 @@ RGBAColor = Tuple[int, int, int, int]
 
 Color = Union[RGBColor, RGBAColor]
 
+ColorStop = Tuple[float, Color]
+
 
 def all_equals(iterable: Iterable) -> bool:
     """Return True if all elements of a given `iterable` are equals, otherwise
@@ -53,6 +55,43 @@ class Gradient(SortedDict):
         if not self:
             return type(self)()
         return type(self)((self.peekitem(0), self.peekitem()))
+
+    def previous_stop(self, pos: float) -> ColorStop | None:
+        """Return the nearest color stop before `pos`, or `None` if it does not
+        exist.
+        """
+        index = self.bisect(pos)
+        try:
+            return self.peekitem(index-1)
+        except IndexError:
+            return None
+
+    def next_stop(self, pos: float) -> ColorStop | None:
+        """Return the nearest color stop after `pos`, or `None` if it does not
+        exist.
+        """
+        index = self.bisect(pos)
+        try:
+            return self.peekitem(index)
+        except IndexError:
+            return None
+
+    def nearest_stop(self, pos: float) -> ColorStop | None:
+        """Return the nearest color stop around `pos`, or `None` id the
+        `Gradient` is empty.
+        """
+        # Return None if the gradient does not have any color stop
+        if not self:
+            return None
+
+        prev_stop = self.previous_stop(pos)
+        next_stop = self.next_stop(pos)
+        prev_pos = prev_stop[0] if prev_stop else float('-inf')
+        next_pos = next_stop[0] if next_stop else float('+inf')
+
+        if abs(prev_pos - pos) <= abs(next_pos - pos):
+            return prev_stop
+        return next_stop
 
     def generate(self, steps: int=10) -> np.ndarray:
         """Generates a an array of `steps` colors from the gradient.\n
