@@ -1,14 +1,30 @@
 import moderngl
 import numpy as np
-from typing import Callable
+from typing import Callable, Union
 from time import perf_counter, strftime
-from PyQt5.QtCore import Qt, QTimer, pyqtSlot
-from PyQt5.QtGui import QSurfaceFormat, QImage
+from PyQt5.QtCore import Qt, QTimer, QPoint, pyqtSlot, pyqtSignal
+from PyQt5.QtGui import (QSurfaceFormat, QImage, QPainter, QLinearGradient,
+        QColor, QPen)
 from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
     QSlider, QColorDialog)
 
+from dynasty.colors import Color, Gradient, WHITE_TO_BLACK
 from dynasty.renderer import Renderer
 from dynasty.geometry import rotation, translation
+
+
+def toRGBA(color: QColor) -> Color:
+    """Simple utility function to convert from a QColor to a tuple of integers
+    depicting RGBA values in the range [0, 255].
+    """
+    return tuple(
+        getattr(color, c)() for c in ('red', 'green', 'blue', 'alpha')
+    )
+
+
+def clamp(value: float, min_: float=0, max_: float=1) -> float:
+    """Clamp `value` in the range [min_, max_]."""
+    return min(max_, max(min_, value))
 
 
 class ModernGLWidget(QOpenGLWidget):
@@ -237,3 +253,155 @@ class ColorDialog(QColorDialog):
 
         self.setOption(QColorDialog.NoButtons, True)
         self.setOption(QColorDialog.ShowAlphaChannel, alpha)
+
+
+class GradientEditor(QWidget):
+    """This custom Qt widget allows editing and preview of a `Gradient` with an
+    arbitrary and variable number of color stops.
+    """
+    #: This signal will be emitted when the bound Gradient has changed
+    gradientChanged = pyqtSignal()
+
+    def __init__(self, gradient: Gradient=WHITE_TO_BLACK, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.gradient = gradient
+        self.selectedPos = None
+
+        self.colorDialog = ColorDialog(self, alpha=True)
+        self.colorDialog.currentColorChanged.connect(self._callback)
+
+        self.setMinimumHeight(30)
+
+    # Qt events
+
+    def paintEvent(self, event):
+        # pylint: disable = unused-argument
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        width = painter.device().width()
+        height = painter.device().height()
+
+        # Gradient draw pass
+        gradient = QLinearGradient(0, 0, width, 0)
+        for stop, color in self.gradient.items():
+            gradient.setColorAt(stop, QColor(*color))
+        painter.fillRect(0, 0, width, height, gradient)
+
+        # Handles draw pass
+        pen = QPen()
+        pen.setWidth(3)
+        pen.setColor(QColor(255, 255, 255, 191))
+        painter.setPen(pen)
+
+        y = height / 2
+        for pos in self.gradient.keys():
+            x = pos * width
+            painter.drawLine(
+                QPoint(x, y - 12),
+                QPoint(x, y + 12)
+            )
+            painter.drawEllipse(QPoint(x, y), 6, 6)
+
+        painter.end()
+
+    def mousePressEvent(self, event):
+        pos = self.getHandlePosFromEvent(event)
+        # Select the color stop under the cursor and update the color picker
+        # dialog accordingly
+        if pos:
+            self.selectedPos = pos
+            color = self.gradient[pos]
+            self.colorDialog.setCurrentColor(QColor(*color))
+
+            # Show the color picker if the right mouse button is pressed above
+            # a color stop
+            if event.button() == Qt.RightButton:
+                self.colorDialog.show()
+
+    def mouseDoubleClickEvent(self, event):
+        pos = self.getHandlePosFromEvent(event)
+        # If one color stop was found, remove it
+        if pos:
+            self.removeColorStop(pos)
+        # If no color stop was found, add one and select it
+        else:
+            pos = self.normalizePos(event.x())
+            self.setColorStop(pos)
+            self.selectedPos = pos
+
+    def mouseMoveEvent(self, event):
+        # Move the last selected color stop if it exists and the left mouse
+        # left button is pressed
+        if event.buttons() | Qt.LeftButton and self.selectedPos is not None:
+            pos = self.normalizePos(event.x())
+            self.moveColorStop(self.selectedPos, pos)
+            self.selectedPos = pos
+
+    # End of Qt events
+
+    def getHandlePosFromEvent(self, event) -> Union[float, None]:
+        """If a handle is found near where the event occured, return its
+        position (in the range [0, 1]), otherwise return None.
+        """
+        pos = self.normalizePos(event.x())
+
+        # Get the positions of the previous and next color stops
+        index = self.gradient.bisect(pos)
+        try:
+            prev_pos = self.gradient.peekitem(index-1)[0]
+        except IndexError:
+            prev_pos = float('-inf')
+        try:
+            next_pos = self.gradient.peekitem(index)[0]
+        except IndexError:
+            next_pos = float('inf')
+
+        # Get the nearest post
+        if abs(prev_pos - pos) < abs(next_pos - pos):
+            nearest_pos = prev_pos
+        else:
+            nearest_pos = next_pos
+
+        # Only return color stop position if it is nearly enough to the event
+        if abs(nearest_pos - pos) * self.width() < 6:
+            return nearest_pos
+
+    def normalizePos(self, pos: float) -> float:
+        """Converts a color stop position from screen space to "gradient"
+        space, i.e. from [0, widget width] to [0, 1].\n
+        Additionnaly, output value is clamped.
+        """
+        return clamp(pos / self.width())
+
+    def setColorStop(self, pos: float, color: Union[Color, None]=None):
+        """Set the color of the gradient at a given position.\n
+        If no color stop exists at this position, one will be created. If no
+        color is specified, the last color of the gradient will be used.
+        """
+        self.gradient[pos] = color or self.gradient.peekitem()[1]
+        self.gradientChanged.emit()
+        self.update()
+
+    def removeColorStop(self, pos: float):
+        """Remove a the color stop at position `pos` from the gradient.\n
+        Removing the first or last color stop is not allowed and will be no-op.
+        """
+        if pos not in self.gradient.endpoints.keys():
+            del self.gradient[pos]
+            self.gradientChanged.emit()
+            self.update()
+
+    def moveColorStop(self, pos: float, newPos: float):
+        """Move the color stop at `pos` to `newPos`."""
+        color = self.gradient.pop(pos)
+        self.gradient[newPos] = color
+        self.gradientChanged.emit()
+        self.update()
+
+    def _callback(self, color: QColor):
+        """Color picker dialog callback function. It will be called by the
+        color picker widget each time a stop color is modified.
+        """
+        self.setColorStop(self.selectedPos, toRGBA(color))
+    
