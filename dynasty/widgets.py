@@ -2,16 +2,16 @@ import moderngl
 import numpy as np
 from typing import Callable, Union
 from time import perf_counter, strftime
-from PyQt5.QtCore import Qt, QTimer, QPoint, pyqtSlot, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, QPoint, QRect, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import (QSurfaceFormat, QImage, QPainter, QLinearGradient,
         QColor, QPen)
-from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
-    QSlider, QColorDialog)
+from PyQt5.QtWidgets import (QGridLayout, QHBoxLayout, QWidget, QOpenGLWidget,
+        QLabel, QSlider, QColorDialog, QSpinBox, qDrawShadePanel)
 
 from dynasty.colors import Color, Gradient, WHITE_TO_BLACK
 from dynasty.geometry import rotation, translation
 from dynasty.renderer import Renderer
-from dynasty.utils import clamp
+from dynasty.utils import LinearMapper, clamp
 
 
 def toRGBA(color: QColor) -> Color:
@@ -242,6 +242,109 @@ class ParamSlider(LabelSlider):
         self.callback(value)
 
 
+class ColorAlphaPicker(QWidget):
+    """This widget is inspired by Qt's `QColorLuminancePicker` and is intended
+    to be inserted in `QColorDialog`, in order to provide a more user-friendly
+    way to change the alpha value.
+    """
+    valueChanged = pyqtSignal(int)
+
+    def __init__(self, *args, color=QColor('black'), **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.cursorSize = 5
+        self.color = color
+        self._value = 255
+
+        self.setMinimumWidth(20)
+
+    @property
+    def value(self) -> int:
+        """Current value of the alpha picker."""
+        return self._value
+
+    @value.setter
+    def value(self, value: int):
+        value = clamp(value, 0, 255)
+        # Only trigger update machinery if value has actually changed
+        if value != self._value:
+            self._value = value
+            self.valueChanged.emit(value)
+            self.update()
+
+    @property
+    def posToVal(self) -> LinearMapper:
+        """A `LinearMapper` instance mapping cursor positions in widget space
+        to the corresponding values in the range [0, 255].
+        """
+        return LinearMapper(
+            (self.gradientRect.bottom(), self.gradientRect.top()), (0, 255)
+        )
+
+    @property
+    def valToPos(self) -> LinearMapper:
+        """A `LinearMapper` instance mapping integer values in the range
+        [0, 255] to the corresponding cursor positions in widget space.
+        """
+        return LinearMapper(
+            (0, 255), (self.gradientRect.bottom(), self.gradientRect.top())
+        )
+
+    @property
+    def gradientRect(self) -> QRect:
+        """Boundaries of the displayed gradient color bar."""
+        w, h = self.width(), self.height()
+        # Those somewhat weird coordinates are designed to match the
+        # original QColorLuminancePicker behavior
+        return QRect(
+            0,                       1 + self.cursorSize/2,
+            w - self.cursorSize, h - 1 - self.cursorSize
+        )
+
+    # Qt events
+
+    def paintEvent(self, event):
+        # pylint: disable = unused-argument
+        painter = QPainter(self)
+        palette = self.palette()
+        painter.setPen(palette.windowText().color())
+        painter.setBrush(palette.windowText())
+
+        # Draw gradient color bar
+        transparent_color = QColor(self.color)
+        transparent_color.setAlpha(0)
+
+        gradient = QLinearGradient(0, 0, 0, self.gradientRect.height())
+        gradient.setColorAt(0, self.color)
+        gradient.setColorAt(1, transparent_color)
+        painter.fillRect(self.gradientRect, gradient)
+        qDrawShadePanel(painter, self.gradientRect, palette, True)
+
+        # Draw cursor
+        y = self.valToPos(self.value)
+        painter.drawPolygon(
+            QPoint(self.gradientRect.width(), y),
+            QPoint(self.width(),              y - self.cursorSize),
+            QPoint(self.width(),              y + self.cursorSize)
+        )
+
+    def mouseMoveEvent(self, event):
+        self.value = self.posToVal(event.y())
+
+    def mousePressEvent(self, event):
+        self.value = self.posToVal(event.y())
+
+    # End Qt events
+
+    @pyqtSlot(QColor)
+    def setColor(self, color: QColor):
+        # RGB channels are used for widget color bar display
+        self.color = QColor(color.rgb())
+        # Alpha channel will be used as the new widget value
+        self.value = color.alpha()
+        self.update()
+
+
 class ColorDialog(QColorDialog):
     """Slight variation of Qt's default color dialog."""
     def __init__(self, *args, alpha=False, **kwargs):
@@ -249,6 +352,17 @@ class ColorDialog(QColorDialog):
 
         self.setOption(QColorDialog.NoButtons, True)
         self.setOption(QColorDialog.ShowAlphaChannel, alpha)
+
+        # Add a ColorAlphaPicker to the QColorDialog if needed
+        if alpha:
+            # This is the QSpinBox usually used to set the alpha value
+            alphaSpinBox = self.findChildren(QSpinBox)[-1]
+
+            alphaPicker = ColorAlphaPicker()
+            alphaPicker.valueChanged.connect(alphaSpinBox.setValue)
+            self.currentColorChanged.connect(alphaPicker.setColor)
+            # Add the ColorAlphaPicker at the end of the correct layout
+            self.findChildren(QHBoxLayout)[1].addWidget(alphaPicker)
 
 
 class GradientEditor(QWidget):
