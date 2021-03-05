@@ -1,10 +1,10 @@
 import numpy as np
-from itertools import islice, chain
 from moderngl import LINES_ADJACENCY, BLEND
 
 from dynasty import APP_DIR
-from dynasty.geometry import translation, persp_projection
 from dynasty.colors import BLACK_TO_RED
+from dynasty.utils import chunks
+from dynasty.geometry import translation, persp_projection
 from dynasty.walkers import WalkerSystem
 
 
@@ -27,18 +27,6 @@ def adjacent_lines_indexes(indexes):
         lines_idx += line_idx
 
     return lines_idx
-
-
-def chunks(iterable, n):
-    """Split an `iterable` into sucessive iterators of lenght `n`."""
-    iterable = iter(iterable)
-    while True:
-        chunk = islice(iterable, n)
-        try:
-            first = next(chunk)
-        except StopIteration:
-            return
-        yield chain((first,), chunk)
 
 
 class Renderer:

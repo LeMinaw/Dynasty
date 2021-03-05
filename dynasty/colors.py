@@ -1,7 +1,9 @@
 from __future__ import annotations
 import numpy as np
-from typing import Tuple, Union, Iterable
+from typing import Tuple, Union
 from sortedcontainers import SortedDict
+
+from dynasty.utils import all_equals
 
 
 RGBColor = Tuple[int, int, int]
@@ -11,13 +13,6 @@ RGBAColor = Tuple[int, int, int, int]
 Color = Union[RGBColor, RGBAColor]
 
 ColorStop = Tuple[float, Color]
-
-
-def all_equals(iterable: Iterable) -> bool:
-    """Return True if all elements of a given `iterable` are equals, otherwise
-    return False.
-    """
-    return len(set(iterable)) <= 1
 
 
 class Gradient(SortedDict):

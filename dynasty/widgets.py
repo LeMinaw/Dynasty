@@ -9,8 +9,9 @@ from PyQt5.QtWidgets import (QGridLayout, QWidget, QOpenGLWidget, QLabel,
     QSlider, QColorDialog)
 
 from dynasty.colors import Color, Gradient, WHITE_TO_BLACK
-from dynasty.renderer import Renderer
 from dynasty.geometry import rotation, translation
+from dynasty.renderer import Renderer
+from dynasty.utils import clamp
 
 
 def toRGBA(color: QColor) -> Color:
@@ -20,11 +21,6 @@ def toRGBA(color: QColor) -> Color:
     return tuple(
         getattr(color, c)() for c in ('red', 'green', 'blue', 'alpha')
     )
-
-
-def clamp(value: float, min_: float=0, max_: float=1) -> float:
-    """Clamp `value` in the range [min_, max_]."""
-    return min(max_, max(min_, value))
 
 
 class ModernGLWidget(QOpenGLWidget):
