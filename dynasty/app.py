@@ -99,7 +99,7 @@ class MainWindow(QMainWindow):
 
 
 class ParamsDock(QDockWidget):
-    def __init__(self, name='', *args, **kwargs):
+    def __init__(self, *args, name='', **kwargs):
         super().__init__(*args, **kwargs)
 
         self.setWindowTitle(name)
@@ -117,7 +117,7 @@ class ParamsDock(QDockWidget):
 
 class SimParamsDock(ParamsDock):
     def __init__(self, *args, **kwargs):
-        super().__init__("Simulation parameters", *args, **kwargs)
+        super().__init__(*args, name="Simulation parameters", **kwargs)
 
         random_box = QGroupBox("Randomize", self)
         random_lay = QVBoxLayout(random_box)
@@ -189,7 +189,7 @@ class SimParamsDock(ParamsDock):
 
 class ViewParamsDock(ParamsDock):
     def __init__(self, *args, **kwargs):
-        super().__init__("Viewport settings", *args, **kwargs)
+        super().__init__(*args, name="Viewport settings", **kwargs)
 
         rot_box = QGroupBox("Rotation speed", self)
         rot_lay = QVBoxLayout(rot_box)
