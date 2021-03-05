@@ -91,4 +91,7 @@ class ViewportInterface(QObject):
 
     def update_pos(self):
         self.system.compute_pos()
+        self.update_vbos()
+
+    def update_vbos(self):
         self.viewport.needs_vbo_update = True

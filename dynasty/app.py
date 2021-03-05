@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
         QVBoxLayout, QGroupBox, QAction, QPushButton)
 
 from dynasty import APP_DIR, __version__
-from dynasty.widgets import Viewport, ParamSlider, ColorDialog
+from dynasty.widgets import Viewport, ParamSlider, ColorDialog, GradientEditor
 from dynasty.interfaces import ViewportInterface
 from dynasty.walkers import WalkerSystem, InterLaw, RelModel
 
@@ -226,6 +226,10 @@ class ViewParamsDock(ParamsDock):
         btn.clicked.connect(bck_dialog.show)
         btn.setStatusTip("Set the background color of the viewport")
         self.layout.addWidget(btn)
+
+        grad_editor = GradientEditor(self.interface.viewport.rings_gradient)
+        grad_editor.gradientChanged.connect(self.interface.update_vbos)
+        self.layout.addWidget(grad_editor)
 
 
 class BackgroundColorDialog(ColorDialog):
