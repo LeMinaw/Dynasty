@@ -63,9 +63,9 @@ def ortho_projection(left=-1, right=1, bottom=-1, top=1, near=.1, far=1000):
 
 
 def persp_projection(fov=30, aspect=1, near=.1, far=1000):
-    """Perspective projection matrix."""
+    """Perspective projection matrix. FOV is in degrees."""
     # Distance of left/right boundaries from origin
-    y = near * np.tan(fov * np.pi/360) 
+    y = near * np.tan(fov * np.pi/360)
     # Same for bottom/top boundaries
     x = y * aspect
 
