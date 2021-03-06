@@ -5,7 +5,8 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
         QVBoxLayout, QGroupBox, QAction, QPushButton)
 
 from dynasty import APP_DIR, __version__
-from dynasty.widgets import Viewport, ParamSlider, ColorDialog, GradientEditor
+from dynasty.widgets import (Viewport, LabeledSlider, LabeledFloatSlider,
+        ColorEditor, GradientEditor)
 from dynasty.interfaces import ViewportInterface
 from dynasty.walkers import WalkerSystem, InterLaw, RelModel
 
@@ -127,100 +128,83 @@ class SimParamsDock(ParamsDock):
 
         btn = QPushButton(text="Start positions", parent=random_box)
         btn.clicked.connect(self.interface.reseed_start_pos)
-        btn.setStatusTip("Randomize walkers start positions")
+        btn.setStatusTip("Randomize walkers start positions.")
         random_lay.addWidget(btn)
 
         btn = QPushButton(text="Relation matrix mask", parent=random_box)
         btn.clicked.connect(self.interface.reseed_rel_mask)
         btn.setStatusTip("Randomize walkers relation matrix mask. Only "
-            "effective when using a mask type involving random")
+            "effective when using a mask type involving random.")
         random_lay.addWidget(btn)
 
         btn = QPushButton(text="Relation matrix values", parent=random_box)
         btn.clicked.connect(self.interface.reseed_rel_matrix)
         btn.setStatusTip("Randomize walkers relation matrix values. Only "
-            "effective when using a relation matrix involving random")
+            "effective when using a relation matrix involving random.")
         random_lay.addWidget(btn)
 
-        self.layout.addWidget(ParamSlider(
-            name = "Walkers count",
-            start = 2,
-            end = 40,
-            default = 4,
-            callback = self.interface.set_count,
-            hint = "Number of interacting walkers"
-        ))
-        self.layout.addWidget(ParamSlider(
-            name = "Walkers spread",
-            start = 1,
-            end = 100,
-            default = 50,
-            callback = self.interface.set_spread,
-            hint = "Average distance from origin walkers have at start"
-        ))
-        self.layout.addWidget(ParamSlider(
-            name = "Average attraction",
-            start = -100,
-            end = 100,
-            default = 50,
-            factor = .001,
-            callback = self.interface.set_rel_avg,
-            hint = ("Average values that binds walkers together. Negative "
-                "value means repulsion, zero means no relation, positive is "
-                "attraction")
-        ))
-        self.layout.addWidget(ParamSlider(
-            name = "Attraction variance",
-            end = 100,
-            default = 0,
-            factor = .001,
-            callback = self.interface.set_rel_var,
-            hint = "How random attraction values are. Zero means no random"
-        ))
-        self.layout.addWidget(ParamSlider(
-            name = "Iterations",
-            start = 1,
-            end = 1000,
-            default = 10,
-            callback = self.interface.set_iterations,
-            hint = "Number of iterations to compute"
-        ))
+        sld = LabeledSlider(name="Walkers count", start=2, end=40)
+        sld.valueChanged.connect(self.interface.set_count)
+        sld.setValue(4)
+        sld.setStatusTip("Number of interacting walkers.")
+        self.layout.addWidget(sld)
+
+        sld = LabeledFloatSlider(name="Walkers spread", start=1, end=100)
+        sld.valueChanged.connect(self.interface.set_spread)
+        sld.setValue(50)
+        sld.setStatusTip("Average distance from origin walkers have at start.")
+        self.layout.addWidget(sld)
+
+        sld = LabeledFloatSlider(
+            name="Average attraction", start=-100, end=100, factor=.001
+        )
+        sld.valueChanged.connect(self.interface.set_rel_avg)
+        sld.setValue(.05)
+        sld.setStatusTip("Average values that binds walkers together. "
+            "Negative value means repulsion, zero means no relation, positive "
+            "is attraction.")
+        self.layout.addWidget(sld)
+
+        sld = LabeledFloatSlider(
+            name="Attraction variance", end=100, factor=.001
+        )
+        sld.valueChanged.connect(self.interface.set_rel_var)
+        sld.setStatusTip("How random attraction values are. Zero means no "
+            "random.")
+        self.layout.addWidget(sld)
+
+        sld = LabeledSlider(name="Iterations", start=1, end=1000)
+        sld.valueChanged.connect(self.interface.set_iterations)
+        sld.setValue(10)
+        sld.setStatusTip("Number of iterations to compute.")
+        self.layout.addWidget(sld)
 
 
 class ViewParamsDock(ParamsDock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, name="Viewport settings", **kwargs)
 
-        rot_box = QGroupBox("Rotation speed", self)
-        rot_lay = QVBoxLayout(rot_box)
-        rot_box.setMaximumHeight(200)
-        rot_box.setLayout(rot_lay)
-        self.layout.addWidget(rot_box)
+        rotBox = QGroupBox("Rotation speed", self)
+        rotLay = QVBoxLayout(rotBox)
+        rotBox.setMaximumHeight(200)
+        rotBox.setLayout(rotLay)
+        self.layout.addWidget(rotBox)
 
-        rot_lay.addWidget(ParamSlider(
-            name = "X axis",
-            start = -180,
-            end = 180,
-            callback = self.interface.set_x_rot_speed,
-            hint = "Viewport rotation speed around X axis"
-        ))
-        rot_lay.addWidget(ParamSlider(
-            name = "Y axis",
-            start = -180,
-            end = 180,
-            default = 10,
-            callback = self.interface.set_y_rot_speed,
-            hint = "Viewport rotation speed around Y axis"
-        ))
-        rot_lay.addWidget(ParamSlider(
-            name = "Z axis",
-            start = -180,
-            end = 180,
-            callback = self.interface.set_z_rot_speed,
-            hint = "Viewport rotation speed around Z axis"
-        ))
+        sld = LabeledFloatSlider(name="X axis", start=-180, end=180)
+        sld.valueChanged.connect(self.interface.set_x_rot_speed)
+        sld.setStatusTip("Viewport rotation speed around X axis")
+        rotLay.addWidget(sld)
 
-        bck_dialog = BackgroundColorDialog(self)
+        sld = LabeledFloatSlider(name="Y axis", start=-180, end=180)
+        sld.valueChanged.connect(self.interface.set_y_rot_speed)
+        sld.setValue(10)
+        sld.setStatusTip("Viewport rotation speed around Y axis")
+        rotLay.addWidget(sld)
+
+        sld = LabeledFloatSlider(name="Z axis", start=-180, end=180)
+        sld.valueChanged.connect(self.interface.set_z_rot_speed)
+        sld.setStatusTip("Viewport rotation speed around Z axis")
+        rotLay.addWidget(sld)
 
         btn = QPushButton(text="Background color", parent=self)
         btn.clicked.connect(bck_dialog.show)

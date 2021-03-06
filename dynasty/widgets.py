@@ -1,11 +1,11 @@
 import moderngl
 import numpy as np
-from typing import Callable, Union
+from typing import Union
 from time import perf_counter, strftime
 from PyQt5.QtCore import Qt, QTimer, QPoint, QRect, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import (QSurfaceFormat, QImage, QPainter, QLinearGradient,
         QColor, QPen)
-from PyQt5.QtWidgets import (QGridLayout, QHBoxLayout, QWidget, QOpenGLWidget,
+from PyQt5.QtWidgets import (QGridLayout, QHBoxLayout, QVBoxLayout, QWidget, QOpenGLWidget,
         QLabel, QSlider, QColorDialog, QSpinBox, qDrawShadePanel)
 
 from dynasty.colors import Color, Gradient, WHITE_TO_BLACK
@@ -178,68 +178,127 @@ class Viewport(ModernGLWidget, Renderer):
         self.resize(size)
 
 
-class LabelSlider(QWidget):
-    """Qt compound widget composed of a slider, a name label and an
-    automaticall updating value label.
+class Slider(QSlider):
+    """Slight variation of Qt's `QSlider` accepting range values in its
+    constructor.
     """
-    def __init__(self,
-            name: str='',
-            start: int=0, end: int=10, default: int=0,
-            hint: str='',
-            *args, **kwargs
-        ):
+    def __init__(self, *args, start: int=0, end: int=0, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.slider = QSlider(Qt.Horizontal, self)
-        self.name_label = QLabel(name, self)
-        self.value_label = QLabel('', self)
+        self.setRange(start, end)
+
+
+class FloatSlider(Slider):
+    """Variation of Qt's `QSlider` allowing to deal with non-integer values.\n
+    The `factor` argument is used to map from integer to float values. For
+    example, a slider width `start=-2`, `end=4` and `factor=0.1` will output
+    values in the range `[-0.2, 0.4]` with `0.1` step.
+    """
+    # Redefine this signal to handle float values
+    valueChanged = pyqtSignal(float)
+
+    def __init__(self, *args, factor: float=1, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        assert factor != 0
+        self.factor = factor
+        # Connect the valueChanged signal from the superclass to the float
+        # conversion method
+        super().valueChanged.connect(self.emitFloatValue)
+
+    @pyqtSlot(int)
+    def emitFloatValue(self, value: int):
+        """Given an integer (generaly from the slider position), emit the
+        corresponding float value.
+        """
+        self.valueChanged.emit(value * self.factor)
+
+    @pyqtSlot(float)
+    def setValue(self, value: float):
+        """Set the value of the slider.\n
+        It has to be a float value, and will be converted to an integer to set
+        the slider internal state.
+        """
+        super().setValue(round(value / self.factor))
+
+
+class AbstractLabeledSlider(QWidget):
+    """Compound Qt widget composed of a slider, a name label and an
+    automatically updating value label.\n
+    This abstract base class needs a slider instance as argument and will
+    support both integer (`Slider`) and float (`FloatSlider`) slider classes.
+    """
+    valueChanged = pyqtSignal([int], [float])
+
+    def __init__(self, *args, name: str, slider: Slider, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.slider = slider
+        self.nameLabel = QLabel(name, self)
+        self.valueLabel = QLabel('', self)
+        # Set initial value label using decicated method
+        self.setValueLabel(self.slider.value())
 
         grid = QGridLayout()
         grid.setContentsMargins(0, 0, 0, 0)
-        grid.addWidget(self.name_label, 0, 0, Qt.AlignLeft)
-        grid.addWidget(self.value_label, 0, 1, Qt.AlignRight)
+        grid.addWidget(self.nameLabel, 0, 0, Qt.AlignLeft)
+        grid.addWidget(self.valueLabel, 0, 1, Qt.AlignRight)
         grid.addWidget(self.slider, 1, 0, 1, 2, Qt.AlignVCenter)
         self.setLayout(grid)
         self.setMaximumHeight(60)
 
-        self.slider.setRange(start, end)
-        self.slider.valueChanged.connect(self.on_value_change)
+        # Connect child slider signals
+        self.slider.valueChanged.connect(self.valueChanged.emit)
+        self.slider.valueChanged.connect(self.setValueLabel)
 
-        if hint:
-            self.setStatusTip(hint)
+    @pyqtSlot(int)
+    @pyqtSlot(float)
+    def setValue(self, value: float):
+        """Set the child slider to a given value."""
+        self.slider.setValue(value)
 
-        # Trigger dummy value change to initialize with default value
-        self.slider.setValue(default)
+    @pyqtSlot(int)
+    @pyqtSlot(float)
+    def setValueLabel(self, value: float):
+        """Set the value label to display a given value."""
+        self.valueLabel.setText(str(round(value, 4)))
 
-    def on_value_change(self, value: int):
-        self.value = value
-        self.value_label.setText(str(round(value, 4)))
 
-
-class ParamSlider(LabelSlider):
-    """Qt widget to provide numeric parameters input.\n
-    The `callback` argument must be a callable taking one argument. It will be
-    called each time the value of the slider is updated, with the new slider
-    value as argument.\n
-    As Qt sliders can only deal with integer values, a `factor` argument is
-    provided. For exemple, a slider width `start=-2`, `end=4` and `factor=0.1`
-    will output values in the range `[-0.2, 0.4]` with `0.1` step.
+class LabeledSlider(AbstractLabeledSlider):
+    """Labeled slider embedding an horizontal `Slider` and outputing integer
+    values.\n
+    See docs for `Slider` and `AbstractLabeledSlider`.
     """
-    def __init__(self,
-            callback: Callable[[float], None] = lambda _: None,
-            factor: float=1,
-            *args, **kwargs
+    # Enforce signal typing because sometimes Qt casts types weirdly
+    valueChanged = pyqtSignal(int)
+
+    def __init__(self, *args,
+            name: str='',
+            start: int=0, end: int=10,
+            **kwargs
         ):
-        self.factor = factor
-        self.callback = callback
+        sld = Slider(Qt.Horizontal, start=start, end=end)
 
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, name=name, slider=sld, **kwargs)
 
-    def on_value_change(self, value: int):
-        value *= self.factor
 
-        super().on_value_change(value)
-        self.callback(value)
+class LabeledFloatSlider(AbstractLabeledSlider):
+    """Labeled slider embedding an horizontal `FloatSlider` and outputing float
+    values.\n
+    See docs for `FloatSlider` and `AbstractLabeledSlider`.
+    """
+    # Enforce signal typing because sometimes Qt casts types weirdly
+    valueChanged = pyqtSignal(float)
+
+    def __init__(self, *args,
+            name: str='',
+            start: int=0, end: int=10,
+            factor: float=1,
+            **kwargs
+        ):
+        sld = FloatSlider(Qt.Horizontal, start=start, end=end, factor=factor)
+
+        super().__init__(*args, name=name, slider=sld, **kwargs)
 
 
 class ColorAlphaPicker(QWidget):
