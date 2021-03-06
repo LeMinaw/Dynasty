@@ -1,14 +1,20 @@
+"""This module contains top-level Qt elements such as the application root
+class, the main window and its docking panels.\n
+For consistency with Qt, this file uses camelCase for variables, instances and
+functions names.
+"""
+
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
-        QVBoxLayout, QGroupBox, QAction, QPushButton)
+        QVBoxLayout, QGroupBox)
 
 from dynasty import APP_DIR, __version__
-from dynasty.widgets import (Viewport, LabeledSlider, LabeledFloatSlider,
-        ColorEditor, GradientEditor)
+from dynasty.factory import make_action, make_button, make_slider
 from dynasty.interfaces import ViewportInterface
 from dynasty.walkers import WalkerSystem, InterLaw, RelModel
+from dynasty.widgets import (Viewport, ColorEditor, GradientEditor)
 
 
 class Application(QApplication):
@@ -39,63 +45,67 @@ class MainWindow(QMainWindow):
         viewport = Viewport(system=system, parent=self)
         self.setCentralWidget(viewport)
 
-        self.viewport_interface = ViewportInterface(
+        self.viewportInterface = ViewportInterface(
             viewport=viewport, parent=self
         )
 
-        sim_params_dock = SimParamsDock(self)
-        self.addDockWidget(Qt.LeftDockWidgetArea, sim_params_dock)
+        simParamsDock = SimParamsDock(self)
+        self.addDockWidget(Qt.LeftDockWidgetArea, simParamsDock)
 
-        view_params_dock = ViewParamsDock(self)
-        self.addDockWidget(Qt.LeftDockWidgetArea, view_params_dock)
-
-        reset_act = QAction("Reset simulation", self)
-        reset_act.setStatusTip("Load default simulation parameters")
-        reset_act.setShortcut('Ctrl+N')
-        reset_act.triggered.connect(self.not_implemented)
-
-        open_act = QAction("Recall parameters...", self)
-        open_act.setStatusTip("Load simulation parameters")
-        open_act.setShortcut('Ctrl+O')
-        open_act.triggered.connect(self.not_implemented)
-
-        save_act = QAction("Save parameters...", self)
-        save_act.setStatusTip("Save simulation parameters")
-        save_act.setShortcut('Ctrl+S')
-        save_act.triggered.connect(self.not_implemented)
-
-        exit_act = QAction("Quit", self)
-        exit_act.setStatusTip("Exit application")
-        exit_act.setShortcut('Ctrl+Q')
-        exit_act.triggered.connect(sys.exit)
-
-        toggle_sim_params_act = sim_params_dock.toggleViewAction()
-        toggle_sim_params_act.setStatusTip("Show/hide simulation parameters "
-            "palette")
-
-        toggle_view_params_act = view_params_dock.toggleViewAction()
-        toggle_view_params_act.setStatusTip("Show/hide viewport settings "
-            "palette")
-
-        export_act = QAction("Export raster...", self)
-        export_act.setStatusTip("Export viewport as raster file")
-        export_act.setShortcut('Ctrl+E')
-        export_act.triggered.connect(viewport.saveFramebuffer)
+        viewParamsDock = ViewParamsDock(self)
+        self.addDockWidget(Qt.LeftDockWidgetArea, viewParamsDock)
 
         menubar = self.menuBar()
-        file_menu = menubar.addMenu("File")
-        edit_menu = menubar.addMenu("Edit")
-        view_menu = menubar.addMenu("View")
-        file_menu.addAction(reset_act)
-        file_menu.addAction(open_act)
-        file_menu.addAction(save_act)
-        file_menu.addAction(exit_act)
-        view_menu.addAction(toggle_sim_params_act)
-        view_menu.addAction(toggle_view_params_act)
-        edit_menu.addAction(export_act)
+        fileMenu = menubar.addMenu("File")
+        editMenu = menubar.addMenu("Edit")
+        viewMenu = menubar.addMenu("View")
 
+        fileMenu.addAction(make_action(
+            name = "Reset simulation",
+            parent = self,
+            shortcut = 'Ctrl+N',
+            slots = [self.notImplemented],
+            hint = "Load default simulation parameters"
+        ))
+        fileMenu.addAction(make_action(
+            name = "Recall parameters...",
+            parent = self,
+            shortcut = 'Ctrl+O',
+            slots = [self.notImplemented],
+            hint = "Load simulation parameters"
+        ))
+        fileMenu.addAction(make_action(
+            name = "Save parameters...",
+            parent = self,
+            shortcut = 'Ctrl+S',
+            slots = [self.notImplemented],
+            hint = "Save simulation parameters"
+        ))
+        fileMenu.addAction(make_action(
+            name = "Quit",
+            parent = self,
+            shortcut = 'Ctrl+Q',
+            slots = [sys.exit],
+            hint = "Exit application"
+        ))
 
-    def not_implemented(self):
+        editMenu.addAction(make_action(
+            name = "Export raster...",
+            parent = self,
+            shortcut = 'Ctrl+E',
+            slots = [viewport.saveFramebuffer],
+            hint = "Export viewport as raster file."
+        ))
+
+        act = simParamsDock.toggleViewAction()
+        act.setStatusTip("Show/hide simulation parameters palette.")
+        viewMenu.addAction(act)
+
+        act = viewParamsDock.toggleViewAction()
+        act.setStatusTip("Show/hide viewport settings palette.")
+        viewMenu.addAction(act)
+
+    def notImplemented(self):
         self.statusBar().showMessage("Not implemented!")
 
 
@@ -113,71 +123,80 @@ class ParamsDock(QDockWidget):
         widget.setLayout(self.layout)
         widget.setMinimumWidth(210)
 
-        self.interface = self.parent().viewport_interface
+        self.interface = self.parent().viewportInterface
 
 
 class SimParamsDock(ParamsDock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, name="Simulation parameters", **kwargs)
 
-        random_box = QGroupBox("Randomize", self)
-        random_lay = QVBoxLayout(random_box)
-        random_box.setMaximumHeight(200)
-        random_box.setLayout(random_lay)
-        self.layout.addWidget(random_box)
+        randBox = QGroupBox("Randomize", self)
+        randLay = QVBoxLayout(randBox)
+        randBox.setMaximumHeight(200)
+        randBox.setLayout(randLay)
+        self.layout.addWidget(randBox)
 
-        btn = QPushButton(text="Start positions", parent=random_box)
-        btn.clicked.connect(self.interface.reseed_start_pos)
-        btn.setStatusTip("Randomize walkers start positions.")
-        random_lay.addWidget(btn)
+        randLay.addWidget(make_button(
+            name = "Start positions",
+            parent = randBox,
+            slots = [self.interface.reseed_start_pos],
+            hint = "Randomize walkers start positions."
+        ))
+        randLay.addWidget(make_button(
+            name = "Relation matrix mask",
+            parent = randBox,
+            slots = [self.interface.reseed_rel_mask],
+            hint = ("Randomize walkers relation matrix mask. Only effective "
+                "when using a mask type involving random.")
+        ))
+        randLay.addWidget(make_button(
+            name = "Relation matrix values",
+            parent = randBox,
+            slots = [self.interface.reseed_rel_matrix],
+            hint = ("Randomize walkers relation matrix values. Only effective "
+                "when using a relation matrix involving random.")
+        ))
 
-        btn = QPushButton(text="Relation matrix mask", parent=random_box)
-        btn.clicked.connect(self.interface.reseed_rel_mask)
-        btn.setStatusTip("Randomize walkers relation matrix mask. Only "
-            "effective when using a mask type involving random.")
-        random_lay.addWidget(btn)
-
-        btn = QPushButton(text="Relation matrix values", parent=random_box)
-        btn.clicked.connect(self.interface.reseed_rel_matrix)
-        btn.setStatusTip("Randomize walkers relation matrix values. Only "
-            "effective when using a relation matrix involving random.")
-        random_lay.addWidget(btn)
-
-        sld = LabeledSlider(name="Walkers count", start=2, end=40)
-        sld.valueChanged.connect(self.interface.set_count)
-        sld.setValue(4)
-        sld.setStatusTip("Number of interacting walkers.")
-        self.layout.addWidget(sld)
-
-        sld = LabeledFloatSlider(name="Walkers spread", start=1, end=100)
-        sld.valueChanged.connect(self.interface.set_spread)
-        sld.setValue(50)
-        sld.setStatusTip("Average distance from origin walkers have at start.")
-        self.layout.addWidget(sld)
-
-        sld = LabeledFloatSlider(
-            name="Average attraction", start=-100, end=100, factor=.001
-        )
-        sld.valueChanged.connect(self.interface.set_rel_avg)
-        sld.setValue(.05)
-        sld.setStatusTip("Average values that binds walkers together. "
-            "Negative value means repulsion, zero means no relation, positive "
-            "is attraction.")
-        self.layout.addWidget(sld)
-
-        sld = LabeledFloatSlider(
-            name="Attraction variance", end=100, factor=.001
-        )
-        sld.valueChanged.connect(self.interface.set_rel_var)
-        sld.setStatusTip("How random attraction values are. Zero means no "
-            "random.")
-        self.layout.addWidget(sld)
-
-        sld = LabeledSlider(name="Iterations", start=1, end=1000)
-        sld.valueChanged.connect(self.interface.set_iterations)
-        sld.setValue(10)
-        sld.setStatusTip("Number of iterations to compute.")
-        self.layout.addWidget(sld)
+        self.layout.addWidget(make_slider(
+            name = "Walkers count",
+            parent = self,
+            start = 2, end = 40,
+            default = 4,
+            slots = [self.interface.set_count],
+            hint = "Number of interacting walkers."
+        ))
+        self.layout.addWidget(make_slider(
+            name = "Walkers spread",
+            parent = self,
+            start = 1, end = 100, factor = 1,
+            default = 50,
+            slots = [self.interface.set_spread],
+            hint = "Average distance from origin walkers have at start."
+        ))
+        self.layout.addWidget(make_slider(
+            name = "Average attraction",
+            parent = self,
+            start = -100, end = 100, factor = .001,
+            default = .05,
+            slots = [self.interface.set_rel_avg],
+            hint = ("Average values that binds walkers together. Negative "
+                "value means repulsion, zero means no relation, positive is "
+                "attraction.")
+        ))
+        self.layout.addWidget(make_slider(
+            name = "Attraction variance",
+            parent = self,
+            end = 100, factor = .001,
+            slots = [self.interface.set_rel_var],
+            hint = "How random attraction values are. Zero means no random."
+        ))
+        self.layout.addWidget(make_slider(
+            name = "Iterations",
+            start = 1, end = 1000,
+            default = 50,
+            slots = [self.interface.set_iterations],
+            hint = "Number of iterations to compute."
+        ))
 
 
 class ViewParamsDock(ParamsDock):
@@ -190,21 +209,28 @@ class ViewParamsDock(ParamsDock):
         rotBox.setLayout(rotLay)
         self.layout.addWidget(rotBox)
 
-        sld = LabeledFloatSlider(name="X axis", start=-180, end=180)
-        sld.valueChanged.connect(self.interface.set_x_rot_speed)
-        sld.setStatusTip("Viewport rotation speed around X axis")
-        rotLay.addWidget(sld)
-
-        sld = LabeledFloatSlider(name="Y axis", start=-180, end=180)
-        sld.valueChanged.connect(self.interface.set_y_rot_speed)
-        sld.setValue(10)
-        sld.setStatusTip("Viewport rotation speed around Y axis")
-        rotLay.addWidget(sld)
-
-        sld = LabeledFloatSlider(name="Z axis", start=-180, end=180)
-        sld.valueChanged.connect(self.interface.set_z_rot_speed)
-        sld.setStatusTip("Viewport rotation speed around Z axis")
-        rotLay.addWidget(sld)
+        rotLay.addWidget(make_slider(
+            name = "X axis",
+            parent = rotBox,
+            start = -180, end = 180, factor = 1,
+            slots = [self.interface.set_x_rot_speed],
+            hint = "Viewport rotation speed around X axis."
+        ))
+        rotLay.addWidget(make_slider(
+            name = "Y axis",
+            parent = rotBox,
+            start = -180, end = 180, factor = 1,
+            default = 10,
+            slots = [self.interface.set_y_rot_speed],
+            hint = "Viewport rotation speed around Y axis."
+        ))
+        rotLay.addWidget(make_slider(
+            name = "Z axis",
+            parent = rotBox,
+            start = -180, end = 180, factor = 1,
+            slots = [self.interface.set_z_rot_speed],
+            hint = "Viewport rotation speed around Z axis."
+        ))
 
         btn = QPushButton(text="Background color", parent=self)
         btn.clicked.connect(bck_dialog.show)
