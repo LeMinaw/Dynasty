@@ -8,7 +8,7 @@ from PyQt5.QtGui import (QSurfaceFormat, QImage, QPainter, QLinearGradient,
 from PyQt5.QtWidgets import (QGridLayout, QHBoxLayout, QVBoxLayout, QWidget, QOpenGLWidget,
         QLabel, QSlider, QColorDialog, QSpinBox, qDrawShadePanel)
 
-from dynasty.colors import Color, Gradient, WHITE_TO_BLACK
+from dynasty.colors import Color, Gradient
 from dynasty.geometry import rotation, translation
 from dynasty.renderer import Renderer
 from dynasty.utils import LinearMapper, clamp
@@ -406,7 +406,7 @@ class ColorAlphaPicker(QWidget):
 
 class ColorDialog(QColorDialog):
     """Slight variation of Qt's default color dialog."""
-    def __init__(self, *args, alpha=False, **kwargs):
+    def __init__(self, *args, alpha: bool=False, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.setOption(QColorDialog.NoButtons, True)
@@ -424,14 +424,74 @@ class ColorDialog(QColorDialog):
             self.findChildren(QHBoxLayout)[1].addWidget(alphaPicker)
 
 
-class GradientEditor(QWidget):
+class ColorWidget(QWidget):
+    """Widget allowing to preview a color and open a color picker dialog."""
+    colorChanged = pyqtSignal(QColor)
+
+    def __init__(self, *args, alpha: bool=False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.colorDialog = ColorDialog(self, alpha=alpha)
+        self.colorDialog.currentColorChanged.connect(self.colorChanged.emit)
+        self.colorDialog.currentColorChanged.connect(self.update)
+
+        self.setMinimumHeight(30)
+
+    # Qt events
+
+    def mousePressEvent(self, event):
+        # pylint: disable = unused-argument
+        self.colorDialog.show()
+
+    def paintEvent(self, event):
+        # pylint: disable = unused-argument
+        w, h = self.width(), self.height()
+        painter = QPainter(self)
+        painter.fillRect(0, 0, w, h, self.colorDialog.currentColor())
+
+    # End Qt events
+
+    @pyqtSlot(QColor)
+    def setColor(self, color: QColor):
+        self.colorDialog.setCurrentColor(color)
+
+
+class LabeledColorWidget(QWidget):
+    """Compound Qt widget embedding a color widget and a name label."""
+    colorChanged = pyqtSignal(QColor)
+
+    def __init__(self, *args, name: str='', alpha: bool=False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.colorWidget = ColorWidget(self, alpha=alpha)
+        self.colorWidget.colorDialog.setWindowTitle(name)
+        self.label = QLabel(name, self)
+
+        lay = QVBoxLayout()
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.addWidget(self.label)
+        lay.addWidget(self.colorWidget)
+        self.setLayout(lay)
+
+        self.colorWidget.colorChanged.connect(self.colorChanged.emit)
+
+    @pyqtSlot(QColor)
+    def setColor(self, color: QColor):
+        self.colorWidget.setColor(color)
+
+    def setStatusTip(self, status: str):
+        status += " Click to edit."
+        super().setStatusTip(status.strip())
+
+
+class GradientWidget(QWidget):
     """This custom Qt widget allows editing and preview of a `Gradient` with an
     arbitrary and variable number of color stops.
     """
     #: This signal will be emitted when the bound Gradient has changed
     gradientChanged = pyqtSignal()
 
-    def __init__(self, gradient: Gradient=WHITE_TO_BLACK, *args, **kwargs):
+    def __init__(self, gradient: Gradient, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.gradient = gradient
@@ -562,4 +622,28 @@ class GradientEditor(QWidget):
         color picker widget each time a stop color is modified.
         """
         self.setColorStop(self.selectedPos, toRGBA(color))
-    
+
+
+class LabeledGradientWidget(QWidget):
+    """Compound Qt widget embedding a gradient widget and a name label."""
+    gradientChanged = pyqtSignal()
+
+    def __init__(self, gradient: Gradient, *args, name: str='', **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.gradientWidget = GradientWidget(gradient, self)
+        self.gradientWidget.colorDialog.setWindowTitle(name)
+        self.label = QLabel(name, self)
+
+        lay = QVBoxLayout()
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.addWidget(self.label)
+        lay.addWidget(self.gradientWidget)
+        self.setLayout(lay)
+
+        self.gradientWidget.gradientChanged.connect(self.gradientChanged.emit)
+
+    def setStatusTip(self, status: str):
+        status += (" Left click to select/move, double click to add/remove, "
+            "right click to edit.")
+        super().setStatusTip(status.strip())

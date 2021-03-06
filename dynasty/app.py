@@ -14,7 +14,8 @@ from dynasty import APP_DIR, __version__
 from dynasty.factory import make_action, make_button, make_slider
 from dynasty.interfaces import ViewportInterface
 from dynasty.walkers import WalkerSystem, InterLaw, RelModel
-from dynasty.widgets import (Viewport, ColorEditor, GradientEditor)
+from dynasty.widgets import (Viewport, LabeledColorWidget,
+        LabeledGradientWidget)
 
 
 class Application(QApplication):
@@ -232,21 +233,15 @@ class ViewParamsDock(ParamsDock):
             hint = "Viewport rotation speed around Z axis."
         ))
 
-        btn = QPushButton(text="Background color", parent=self)
-        btn.clicked.connect(bck_dialog.show)
-        btn.setStatusTip("Set the background color of the viewport")
-        self.layout.addWidget(btn)
+        wdg = LabeledColorWidget(self, name="Background color")
+        wdg.setStatusTip("Set the background color of the viewport.")
+        wdg.colorChanged.connect(self.interface.setBackgroundColor)
+        self.layout.addWidget(wdg)
 
-        grad_editor = GradientEditor(self.interface.viewport.rings_gradient)
-        grad_editor.gradientChanged.connect(self.interface.updateVBOs)
-        self.layout.addWidget(grad_editor)
-
-
-class BackgroundColorDialog(ColorDialog):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.setWindowTitle("Background color")
-
-        interface = self.parent().interface
-        self.currentColorChanged.connect(interface.set_background_color)
+        wdg = LabeledGradientWidget(
+            self.interface.viewport.rings_gradient, self, name="Rings gradient"
+        )
+        wdg.setStatusTip("Edit the gradient alongside the rings of the "
+            "3D model.")
+        wdg.gradientChanged.connect(self.interface.updateVBOs)
+        self.layout.addWidget(wdg)
