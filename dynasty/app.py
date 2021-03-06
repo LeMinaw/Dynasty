@@ -139,20 +139,20 @@ class SimParamsDock(ParamsDock):
         randLay.addWidget(make_button(
             name = "Start positions",
             parent = randBox,
-            slots = [self.interface.reseed_start_pos],
+            slots = [self.interface.reseedStartPos],
             hint = "Randomize walkers start positions."
         ))
         randLay.addWidget(make_button(
             name = "Relation matrix mask",
             parent = randBox,
-            slots = [self.interface.reseed_rel_mask],
+            slots = [self.interface.reseedRelMask],
             hint = ("Randomize walkers relation matrix mask. Only effective "
                 "when using a mask type involving random.")
         ))
         randLay.addWidget(make_button(
             name = "Relation matrix values",
             parent = randBox,
-            slots = [self.interface.reseed_rel_matrix],
+            slots = [self.interface.reseedRelMatrix],
             hint = ("Randomize walkers relation matrix values. Only effective "
                 "when using a relation matrix involving random.")
         ))
@@ -162,7 +162,7 @@ class SimParamsDock(ParamsDock):
             parent = self,
             start = 2, end = 40,
             default = 4,
-            slots = [self.interface.set_count],
+            slots = [self.interface.setCount],
             hint = "Number of interacting walkers."
         ))
         self.layout.addWidget(make_slider(
@@ -170,7 +170,7 @@ class SimParamsDock(ParamsDock):
             parent = self,
             start = 1, end = 100, factor = 1,
             default = 50,
-            slots = [self.interface.set_spread],
+            slots = [self.interface.setSpread],
             hint = "Average distance from origin walkers have at start."
         ))
         self.layout.addWidget(make_slider(
@@ -178,7 +178,7 @@ class SimParamsDock(ParamsDock):
             parent = self,
             start = -100, end = 100, factor = .001,
             default = .05,
-            slots = [self.interface.set_rel_avg],
+            slots = [self.interface.setRelAvg],
             hint = ("Average values that binds walkers together. Negative "
                 "value means repulsion, zero means no relation, positive is "
                 "attraction.")
@@ -187,14 +187,14 @@ class SimParamsDock(ParamsDock):
             name = "Attraction variance",
             parent = self,
             end = 100, factor = .001,
-            slots = [self.interface.set_rel_var],
+            slots = [self.interface.setRelVar],
             hint = "How random attraction values are. Zero means no random."
         ))
         self.layout.addWidget(make_slider(
             name = "Iterations",
             start = 1, end = 1000,
             default = 50,
-            slots = [self.interface.set_iterations],
+            slots = [self.interface.setIterations],
             hint = "Number of iterations to compute."
         ))
 
@@ -213,7 +213,7 @@ class ViewParamsDock(ParamsDock):
             name = "X axis",
             parent = rotBox,
             start = -180, end = 180, factor = 1,
-            slots = [self.interface.set_x_rot_speed],
+            slots = [self.interface.setXRotSpeed],
             hint = "Viewport rotation speed around X axis."
         ))
         rotLay.addWidget(make_slider(
@@ -221,14 +221,14 @@ class ViewParamsDock(ParamsDock):
             parent = rotBox,
             start = -180, end = 180, factor = 1,
             default = 10,
-            slots = [self.interface.set_y_rot_speed],
+            slots = [self.interface.setYRotSpeed],
             hint = "Viewport rotation speed around Y axis."
         ))
         rotLay.addWidget(make_slider(
             name = "Z axis",
             parent = rotBox,
             start = -180, end = 180, factor = 1,
-            slots = [self.interface.set_z_rot_speed],
+            slots = [self.interface.setZRotSpeed],
             hint = "Viewport rotation speed around Z axis."
         ))
 
@@ -238,7 +238,7 @@ class ViewParamsDock(ParamsDock):
         self.layout.addWidget(btn)
 
         grad_editor = GradientEditor(self.interface.viewport.rings_gradient)
-        grad_editor.gradientChanged.connect(self.interface.update_vbos)
+        grad_editor.gradientChanged.connect(self.interface.updateVBOs)
         self.layout.addWidget(grad_editor)
 
 

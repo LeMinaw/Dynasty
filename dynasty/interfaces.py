@@ -1,3 +1,9 @@
+"""This module regroups classes provinding signals and slots based interfaces
+for other Qt-agnostic components.\n
+For consistency with Qt, this file uses camelCase for variables, instances and
+functions names.
+"""
+
 from time import perf_counter_ns
 from PyQt5.QtCore import QObject, pyqtSlot
 from PyQt5.QtGui import QColor
@@ -20,78 +26,78 @@ class ViewportInterface(QObject):
         return self.viewport.system
 
     @pyqtSlot()
-    def reseed_start_pos(self):
+    def reseedStartPos(self):
         self.system.start_pos_seed = perf_counter_ns()
-        self.update_start_pos()
+        self.updateStartPos()
 
     @pyqtSlot()
-    def reseed_rel_mask(self):
+    def reseedRelMask(self):
         self.system.rel_mask_seed = perf_counter_ns()
-        self.update_rel_mask()
+        self.updateRelMask()
 
     @pyqtSlot()
-    def reseed_rel_matrix(self):
+    def reseedRelMatrix(self):
         self.system.rel_matrix_seed = perf_counter_ns()
-        self.update_rel_matrix()
+        self.updateRelMatrix()
 
     @pyqtSlot(int)
-    def set_count(self, x):
+    def setCount(self, x):
         self.system.params['count'] = x
-        self.update_start_pos()
+        self.updateStartPos()
 
     @pyqtSlot(float)
-    def set_spread(self, x):
+    def setSpread(self, x):
         self.system.params['spread'] = x
-        self.update_pos()
+        self.updatePos()
 
     @pyqtSlot(float)
-    def set_rel_avg(self, x):
+    def setRelAvg(self, x):
         self.system.params['rel_avg'] = x
-        self.update_rel_matrix()
+        self.updateRelMatrix()
 
     @pyqtSlot(float)
-    def set_rel_var(self, x):
+    def setRelVar(self, x):
         self.system.params['rel_var'] = x
-        self.update_rel_matrix()
+        self.updateRelMatrix()
 
     @pyqtSlot(int)
-    def set_iterations(self, x):
+    def setIterations(self, x):
         self.system.params['iterations'] = x
-        self.update_pos()
+        self.updatePos()
 
     @pyqtSlot(float)
-    def set_x_rot_speed(self, x):
+    def setXRotSpeed(self, x):
         self.viewport.rotation_speed[0] = x
 
     @pyqtSlot(float)
-    def set_y_rot_speed(self, x):
+    def setYRotSpeed(self, x):
         self.viewport.rotation_speed[1] = x
 
     @pyqtSlot(float)
-    def set_z_rot_speed(self, x):
+    def setZRotSpeed(self, x):
         self.viewport.rotation_speed[2] = x
 
     @pyqtSlot(QColor)
-    def set_background_color(self, color):
+    def setBackgroundColor(self, color):
         self.viewport.background_color = tuple(
             getattr(color, c)() / 255 for c in ('red', 'green', 'blue')
         )
 
-    def update_start_pos(self):
+    def updateStartPos(self):
         self.system.generate_start_pos()
-        self.update_rel_mask()
+        self.updateRelMask()
 
-    def update_rel_mask(self):
+    def updateRelMask(self):
         self.system.generate_relation_mask()
-        self.update_rel_matrix()
+        self.updateRelMatrix()
 
-    def update_rel_matrix(self):
+    def updateRelMatrix(self):
         self.system.generate_relation_matrix()
-        self.update_pos()
+        self.updatePos()
 
-    def update_pos(self):
+    def updatePos(self):
         self.system.compute_pos()
-        self.update_vbos()
+        self.updateVBOs()
 
-    def update_vbos(self):
+    def updateVBOs(self):
         self.viewport.needs_vbo_update = True
