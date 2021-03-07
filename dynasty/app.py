@@ -229,6 +229,19 @@ class ViewParamsDock(ParamsDock):
                 "walkers together.")
         ))
 
+        wdg = LabeledGradientWidget(
+            self.interface.ringsGradient, self, name="Rings gradient"
+        )
+        wdg.setStatusTip("Edit the gradient alongside the rings of the "
+            "3D model.")
+        wdg.gradientChanged.connect(self.interface.updateVBOs)
+        self.layout.addWidget(wdg)
+
+        wdg = LabeledColorWidget(self, name="Background color")
+        wdg.setStatusTip("Set the background color of the viewport.")
+        wdg.colorChanged.connect(self.interface.setBackgroundColor)
+        self.layout.addWidget(wdg)
+
         rotBox = QGroupBox("Rotation speed", self)
         rotLay = QVBoxLayout(rotBox)
         rotBox.setMaximumHeight(200)
@@ -258,15 +271,3 @@ class ViewParamsDock(ParamsDock):
             hint = "Viewport rotation speed around Z axis."
         ))
 
-        wdg = LabeledColorWidget(self, name="Background color")
-        wdg.setStatusTip("Set the background color of the viewport.")
-        wdg.colorChanged.connect(self.interface.setBackgroundColor)
-        self.layout.addWidget(wdg)
-
-        wdg = LabeledGradientWidget(
-            self.interface.ringsGradient, self, name="Rings gradient"
-        )
-        wdg.setStatusTip("Edit the gradient alongside the rings of the "
-            "3D model.")
-        wdg.gradientChanged.connect(self.interface.updateVBOs)
-        self.layout.addWidget(wdg)
