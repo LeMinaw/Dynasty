@@ -251,6 +251,22 @@ class ViewParamsDock(ParamsDock):
             slots = [self.interface.setEdgesWidth],
             hint = "Set the edges display linewidth."
         ))
+        self.layout.addWidget(make_slider(
+            name = "Rings opacity",
+            parent = self,
+            end = 100, factor = .01,
+            default = .4,
+            slots = [self.interface.setRingsOpacity],
+            hint = ("Adjust rings opacity by premultiplying gradient alpha.")
+        ))
+        self.layout.addWidget(make_slider(
+            name = "Edges opacity",
+            parent = self,
+            end = 100, factor = .01,
+            default = .8,
+            slots = [self.interface.setEdgesOpacity],
+            hint = ("Adjust edges opacity by premultiplying gradient alpha.")
+        ))
 
         wdg = LabeledGradientWidget(
             self.interface.ringsGradient, self, name="Rings gradient"

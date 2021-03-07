@@ -101,6 +101,14 @@ class ViewportInterface(QObject):
         self.viewport.params.edges_width = x
 
     @pyqtSlot(float)
+    def setRingsOpacity(self, x):
+        self.viewport.params.rings_opacity = x
+
+    @pyqtSlot(float)
+    def setEdgesOpacity(self, x):
+        self.viewport.params.edges_opacity = x
+
+    @pyqtSlot(float)
     def setXRotSpeed(self, x):
         self.viewport.rotation_speed[0] = x
 
