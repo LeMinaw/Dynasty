@@ -27,8 +27,17 @@ class ViewportInterface(QObject):
 
     @property
     def ringsGradient(self):
-        """Interface directly presents Gradient as it is a mutable class."""
+        """Interface directly presents object instance as Gradient as is a
+        mutable class.
+        """
         return self.viewport.params.rings_gradient
+
+    @property
+    def edgesGradient(self):
+        """Interface directly presents object instance as Gradient as is a
+        mutable class.
+        """
+        return self.viewport.params.edges_gradient
 
     @pyqtSlot()
     def reseedStartPos(self):

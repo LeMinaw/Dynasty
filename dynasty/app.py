@@ -248,7 +248,7 @@ class ViewParamsDock(ParamsDock):
             parent = self,
             end = 100, factor = .1,
             default = 5,
-            slots = [self.interface.setRingsWidth],
+            slots = [self.interface.setEdgesWidth],
             hint = "Set the edges display linewidth."
         ))
 
@@ -256,6 +256,14 @@ class ViewParamsDock(ParamsDock):
             self.interface.ringsGradient, self, name="Rings gradient"
         )
         wdg.setStatusTip("Edit the gradient alongside the rings of the "
+            "3D model.")
+        wdg.gradientChanged.connect(self.interface.updateVBOs)
+        self.layout.addWidget(wdg)
+
+        wdg = LabeledGradientWidget(
+            self.interface.edgesGradient, self, name="Edges gradient"
+        )
+        wdg.setStatusTip("Edit the gradient alongside the edges of the "
             "3D model.")
         wdg.gradientChanged.connect(self.interface.updateVBOs)
         self.layout.addWidget(wdg)
