@@ -206,23 +206,29 @@ class ViewParamsDock(ParamsDock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, name="Viewport settings", **kwargs)
 
-        self.layout.addWidget(make_checkbox(
+        box = QGroupBox("Visibility", self)
+        lay = QVBoxLayout(box)
+        box.setMaximumHeight(120)
+        box.setLayout(lay)
+        self.layout.addWidget(box)
+
+        lay.addWidget(make_checkbox(
             name = "Display rings",
-            parent = self,
+            parent = box,
             default = True,
             slots = [self.interface.setRingsDisplay],
             hint = "Show/hide line segments between walkers at each iteration."
         ))
-        self.layout.addWidget(make_checkbox(
+        lay.addWidget(make_checkbox(
             name = "Display edges",
-            parent = self,
+            parent = box,
             default = True,
             slots = [self.interface.setEdgesDisplay],
             hint = "Show/hide walkers trajectories."
         ))
-        self.layout.addWidget(make_checkbox(
+        lay.addWidget(make_checkbox(
             name = "Close rings",
-            parent = self,
+            parent = box,
             default = True,
             slots = [self.interface.setClosedRings],
             hint = ("Close rings loops by connecting the first and last "
@@ -259,32 +265,31 @@ class ViewParamsDock(ParamsDock):
         wdg.colorChanged.connect(self.interface.setBackgroundColor)
         self.layout.addWidget(wdg)
 
-        rotBox = QGroupBox("Rotation speed", self)
-        rotLay = QVBoxLayout(rotBox)
-        rotBox.setMaximumHeight(200)
-        rotBox.setLayout(rotLay)
-        self.layout.addWidget(rotBox)
+        box = QGroupBox("Rotation speed", self)
+        lay = QVBoxLayout(box)
+        box.setMaximumHeight(200)
+        box.setLayout(lay)
+        self.layout.addWidget(box)
 
-        rotLay.addWidget(make_slider(
+        lay.addWidget(make_slider(
             name = "X axis",
-            parent = rotBox,
+            parent = box,
             start = -180, end = 180, factor = 1,
             slots = [self.interface.setXRotSpeed],
             hint = "Viewport rotation speed around X axis."
         ))
-        rotLay.addWidget(make_slider(
+        lay.addWidget(make_slider(
             name = "Y axis",
-            parent = rotBox,
+            parent = box,
             start = -180, end = 180, factor = 1,
             default = 10,
             slots = [self.interface.setYRotSpeed],
             hint = "Viewport rotation speed around Y axis."
         ))
-        rotLay.addWidget(make_slider(
+        lay.addWidget(make_slider(
             name = "Z axis",
-            parent = rotBox,
+            parent = box,
             start = -180, end = 180, factor = 1,
             slots = [self.interface.setZRotSpeed],
             hint = "Viewport rotation speed around Z axis."
         ))
-
