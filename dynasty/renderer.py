@@ -1,3 +1,4 @@
+from collections import namedtuple
 from dataclasses import dataclass, field
 import numpy as np
 from moderngl import LINES_ADJACENCY, BLEND
@@ -30,6 +31,13 @@ def adjacent_lines_indexes(indexes):
     return lines_idx
 
 
+RendererVBOs = namedtuple('VBOs', ('pos', 'rings_colors', 'edges_colors'))
+
+RendererIBOs = namedtuple('IBOs', ('rings', 'edges'))
+
+RendererVAOs = namedtuple('VAOs', ('rings', 'edges'))
+
+
 @dataclass
 class RendererParams:
     """Class intended to hold renderer settings and parameters."""
@@ -58,7 +66,13 @@ class Renderer:
         self.model = np.eye(4, dtype='f4')
         self.view = translation(0, 0, -100)
 
+        # Those need to be set externally by the subclass when the GL context
+        # and framebuffer are ready
         self.ctx, self.screen = None, None
+
+        # Those objects need the GL context to be ready to be initialized
+        self.prog = None
+        self.vbos, self.ibos, self.vaos = None, None, None
 
         self.needs_vbo_update = True
 
@@ -79,14 +93,18 @@ class Renderer:
         )
 
     def initialize_vertex_buffers(self):
-        # 4 bytes, 3 coordinates, 40 walkers, 1000 iterations
-        self.pos_vbo = self.ctx.buffer(reserve=4 * 3 * 40 * 1000)
-        # 1 byte, 4 channels, 40 walkers, 1000 iterations
-        self.rings_colors_vbo = self.ctx.buffer(reserve=4 * 40 * 1000)
-        self.edges_colors_vbo = self.ctx.buffer(reserve=4 * 40 * 1000)
-        # 4 bytes, 4 verts per line, 40 walkers, 1000 iterations
-        self.rings_ibo = self.ctx.buffer(reserve=4 * 4 * 40 * 1000)
-        self.edges_ibo = self.ctx.buffer(reserve=4 * 4 * 40 * 1000)
+        self.vbos = RendererVBOs(
+            # 4 bytes, 3 coordinates, 40 walkers, 1000 iterations
+            pos = self.ctx.buffer(reserve=4 * 3 * 40 * 1000),
+            # 1 byte, 4 channels, 40 walkers, 1000 iterations
+            rings_colors = self.ctx.buffer(reserve=4 * 40 * 1000),
+            edges_colors = self.ctx.buffer(reserve=4 * 40 * 1000)
+        )
+        self.ibos = RendererIBOs(
+            # 4 bytes, 4 verts per line, 40 walkers, 1000 iterations
+            rings = self.ctx.buffer(reserve=4 * 4 * 40 * 1000),
+            edges = self.ctx.buffer(reserve=4 * 4 * 40 * 1000)
+        )
 
         #                  VAOs structure
         # +-----------------------------------+-----------+
@@ -97,18 +115,20 @@ class Renderer:
         # |00|01|02|03|04|05|06|07|08|09|0A|0B|0C|0D|0E|0F|
         # +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
         rings_content = (
-            (self.pos_vbo,          '3f4', 'pos'),
-            (self.rings_colors_vbo, '4f1', 'color'),
+            (self.vbos.pos,          '3f4', 'pos'),
+            (self.vbos.rings_colors, '4f1', 'color'),
         )
         edges_content = (
-            (self.pos_vbo,          '3f4', 'pos'),
-            (self.edges_colors_vbo, '4f1', 'color'),
+            (self.vbos.pos,          '3f4', 'pos'),
+            (self.vbos.edges_colors, '4f1', 'color'),
         )
-        self.rings_vao = self.ctx.vertex_array(
-            self.prog, rings_content, self.rings_ibo
-        )
-        self.edges_vao = self.ctx.vertex_array(
-            self.prog, edges_content, self.edges_ibo
+        self.vaos = RendererVAOs(
+            rings = self.ctx.vertex_array(
+                self.prog, rings_content, self.ibos.rings
+            ),
+            edges = self.ctx.vertex_array(
+                self.prog, edges_content, self.ibos.edges
+            )
         )
 
     def compute_vertex_buffers(self):
@@ -155,18 +175,18 @@ class Renderer:
         edges_idx = np.array(edges_idx, dtype='u4')
 
         # Write data to VBOs and IBOs
-        self.pos_vbo.clear()
-        self.pos_vbo.write(pos)
+        self.vbos.pos.clear()
+        self.vbos.pos.write(pos)
 
-        self.rings_colors_vbo.clear()
-        self.rings_colors_vbo.write(rings_colors)
-        self.edges_colors_vbo.clear()
-        self.edges_colors_vbo.write(edges_colors)
+        self.vbos.rings_colors.clear()
+        self.vbos.rings_colors.write(rings_colors)
+        self.vbos.edges_colors.clear()
+        self.vbos.edges_colors.write(edges_colors)
 
-        self.rings_ibo.clear()
-        self.rings_ibo.write(rings_idx)
-        self.edges_ibo.clear()
-        self.edges_ibo.write(edges_idx)
+        self.ibos.rings.clear()
+        self.ibos.rings.write(rings_idx)
+        self.ibos.edges.clear()
+        self.ibos.edges.write(edges_idx)
 
         # Mark VBOs as updated
         self.needs_vbo_update = False
@@ -188,6 +208,6 @@ class Renderer:
             self.compute_vertex_buffers()
 
         self.prog['width'] = self.params.rings_width
-        self.rings_vao.render(LINES_ADJACENCY)
+        self.vaos.rings.render(LINES_ADJACENCY)
         self.prog['width'] = self.params.edges_width
-        self.edges_vao.render(LINES_ADJACENCY)
+        self.vaos.edges.render(LINES_ADJACENCY)
