@@ -32,6 +32,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(f"Dynasty {__version__}")
         self.resize(900, 600)
+        self.setDockOptions(self.AnimatedDocks | self.VerticalTabs)
         self.statusBar().showMessage("Welcome to Dynasty!")
 
         system = WalkerSystem({
