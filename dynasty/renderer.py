@@ -4,7 +4,7 @@ import numpy as np
 from moderngl import LINES_ADJACENCY, BLEND
 
 from dynasty import APP_DIR
-from dynasty.colors import RGBColor, RGBAColor, Gradient, BLACK_TO_RED
+from dynasty.colors import RGBColor, Gradient, BLACK_TO_RED, WHITE_TO_BLACK
 from dynasty.geometry import translation, persp_projection
 from dynasty.utils import chunks
 from dynasty.walkers import WalkerSystem
@@ -44,7 +44,7 @@ class RendererParams:
     background_color: RGBColor = (255, 255, 255)
     # Set default value through factory as Gradient is a mutable class
     rings_gradient: Gradient = field(default_factory=lambda: BLACK_TO_RED)
-    edges_color: RGBAColor = (0, 0, 0, 255)
+    edges_gradient: Gradient = field(default_factory=lambda: WHITE_TO_BLACK)
     show_rings: bool = True
     show_edges: bool = True
     close_rings: bool = True
@@ -146,9 +146,10 @@ class Renderer:
             .generate(vertex_count)
             .astype('u1')
         )
-        edges_colors = np.tile(
-            self.params.edges_color, (vertex_count, 1)
-        ).astype('u1')
+        edges_colors = (self.params.edges_gradient
+            .generate(vertex_count)
+            .astype('u1')
+        )
 
         # Compute vertex indexes
         rings_idx = []
