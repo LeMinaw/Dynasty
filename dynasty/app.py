@@ -229,6 +229,23 @@ class ViewParamsDock(ParamsDock):
                 "walkers together.")
         ))
 
+        self.layout.addWidget(make_slider(
+            name = "Rings linewidth",
+            parent = self,
+            end = 100, factor = .1,
+            default = 3,
+            slots = [self.interface.setRingsWidth],
+            hint = "Set the rings display linewidth."
+        ))
+        self.layout.addWidget(make_slider(
+            name = "Edges linewidth",
+            parent = self,
+            end = 100, factor = .1,
+            default = 5,
+            slots = [self.interface.setRingsWidth],
+            hint = "Set the edges display linewidth."
+        ))
+
         wdg = LabeledGradientWidget(
             self.interface.ringsGradient, self, name="Rings gradient"
         )

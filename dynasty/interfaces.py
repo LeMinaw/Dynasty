@@ -84,6 +84,14 @@ class ViewportInterface(QObject):
         self.updateVBOs()
 
     @pyqtSlot(float)
+    def setRingsWidth(self, x):
+        self.viewport.params.rings_width = x
+
+    @pyqtSlot(float)
+    def setEdgesWidth(self, x):
+        self.viewport.params.edges_width = x
+
+    @pyqtSlot(float)
     def setXRotSpeed(self, x):
         self.viewport.rotation_speed[0] = x
 
