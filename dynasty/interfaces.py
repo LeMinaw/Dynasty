@@ -70,6 +70,19 @@ class ViewportInterface(QObject):
         self.system.params['iterations'] = x
         self.updatePos()
 
+    @pyqtSlot(int)
+    def setRingsDisplay(self, x):
+        self.viewport.params.show_rings = bool(x)
+
+    @pyqtSlot(int)
+    def setEdgesDisplay(self, x):
+        self.viewport.params.show_edges = bool(x)
+
+    @pyqtSlot(int)
+    def setClosedRings(self, x):
+        self.viewport.params.close_rings = bool(x)
+        self.updateVBOs()
+
     @pyqtSlot(float)
     def setXRotSpeed(self, x):
         self.viewport.rotation_speed[0] = x

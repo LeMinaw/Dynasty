@@ -4,7 +4,7 @@ widgets instanciation less verbose and error-prone.
 
 from __future__ import annotations
 from typing import Sequence, Callable
-from PyQt5.QtWidgets import QPushButton, QAction
+from PyQt5.QtWidgets import QPushButton, QAction, QCheckBox
 from PyQt5.QtCore import QObject
 
 from dynasty.widgets import LabeledSlider, LabeledFloatSlider
@@ -57,6 +57,31 @@ def make_button(
         btn.setStatusTip(hint)
 
     return btn
+
+
+def make_checkbox(
+        name: str = '',
+        parent: QObject|None = None,
+        default: bool = False,
+        slots: Sequence[Callable, ...] = (),
+        hint: str = ''
+    ):
+    """Make a simple, default Qt labeled checkbox button.\n
+    Slots will be connected to the `stateChanged` signal.
+    """
+    if parent is not None:
+        cbx = QCheckBox(text=name, parent=parent)
+    else:
+        cbx = QCheckBox(text=name)
+
+    for slot in slots:
+        cbx.stateChanged.connect(slot)
+
+    cbx.setChecked(default)
+    if hint:
+        cbx.setStatusTip(hint)
+
+    return cbx
 
 
 def make_slider(

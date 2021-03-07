@@ -11,7 +11,8 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
         QVBoxLayout, QGroupBox)
 
 from dynasty import APP_DIR, __version__
-from dynasty.factory import make_action, make_button, make_slider
+from dynasty.factory import (make_action, make_checkbox, make_button,
+        make_slider)
 from dynasty.interfaces import ViewportInterface
 from dynasty.walkers import WalkerSystem, InterLaw, RelModel
 from dynasty.widgets import (Viewport, LabeledColorWidget,
@@ -203,6 +204,29 @@ class SimParamsDock(ParamsDock):
 class ViewParamsDock(ParamsDock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, name="Viewport settings", **kwargs)
+
+        self.layout.addWidget(make_checkbox(
+            name = "Display rings",
+            parent = self,
+            default = True,
+            slots = [self.interface.setRingsDisplay],
+            hint = "Show/hide line segments between walkers at each iteration."
+        ))
+        self.layout.addWidget(make_checkbox(
+            name = "Display edges",
+            parent = self,
+            default = True,
+            slots = [self.interface.setEdgesDisplay],
+            hint = "Show/hide walkers trajectories."
+        ))
+        self.layout.addWidget(make_checkbox(
+            name = "Close rings",
+            parent = self,
+            default = True,
+            slots = [self.interface.setClosedRings],
+            hint = ("Close rings loops by connecting the first and last "
+                "walkers together.")
+        ))
 
         rotBox = QGroupBox("Rotation speed", self)
         rotLay = QVBoxLayout(rotBox)
