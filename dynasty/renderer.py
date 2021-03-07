@@ -50,6 +50,9 @@ class RendererParams:
     close_rings: bool = True
     rings_width: float = 3
     edges_width: float = 5
+    # Opacities in [0, 1]
+    rings_opacity: float = .1
+    edges_opacity: float = 1
 
     @property
     def background_color_normalized(self):
@@ -211,9 +214,11 @@ class Renderer:
             self.compute_vertex_buffers()
 
         if self.params.show_rings:
+            self.prog['opacity'] = self.params.rings_opacity
             self.prog['width'] = self.params.rings_width
             self.vaos.rings.render(LINES_ADJACENCY)
 
         if self.params.show_edges:
+            self.prog['opacity'] = self.params.edges_opacity
             self.prog['width'] = self.params.edges_width
             self.vaos.edges.render(LINES_ADJACENCY)
