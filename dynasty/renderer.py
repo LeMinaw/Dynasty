@@ -1,10 +1,11 @@
+from dataclasses import dataclass, field
 import numpy as np
 from moderngl import LINES_ADJACENCY, BLEND
 
 from dynasty import APP_DIR
-from dynasty.colors import BLACK_TO_RED
-from dynasty.utils import chunks
+from dynasty.colors import RGBColor, RGBAColor, Gradient, BLACK_TO_RED
 from dynasty.geometry import translation, persp_projection
+from dynasty.utils import chunks
 from dynasty.walkers import WalkerSystem
 
 
@@ -29,19 +30,33 @@ def adjacent_lines_indexes(indexes):
     return lines_idx
 
 
+@dataclass
+class RendererParams:
+    """Class intended to hold renderer settings and parameters."""
+    background_color: RGBColor = (255, 255, 255)
+    # Set default value through factory as Gradient is a mutable class
+    rings_gradient: Gradient = field(default_factory=lambda: BLACK_TO_RED)
+    edges_color: RGBAColor = (0, 0, 0, 255)
+    rings_width: float = 3
+    edges_width: float = 5
+    close_rings: bool = True
+
+    @property
+    def background_color_normalized(self):
+        return tuple(c/255 for c in self.background_color)
+
+
 class Renderer:
     """This class implements a context-agnostic ModernGL renderer for
     `WalkerSystem` instances.\n
     Its `ctx` and `screen` attributes must be setup externally to a ModernGL
     context and framebuffer respectively.
     """
-    def __init__(self, system: WalkerSystem):
+    def __init__(self, system: WalkerSystem, params=RendererParams()):
         self.system = system
+        self.params = params
         self.model = np.eye(4, dtype='f4')
         self.view = translation(0, 0, -100)
-        self.background_color = (1, 1, 1) # White
-        self.close_rings = True
-        self.rings_gradient = BLACK_TO_RED
 
         self.ctx, self.screen = None, None
 
@@ -68,8 +83,10 @@ class Renderer:
         self.pos_vbo = self.ctx.buffer(reserve=4 * 3 * 40 * 1000)
         # 1 byte, 4 channels, 40 walkers, 1000 iterations
         self.rings_colors_vbo = self.ctx.buffer(reserve=4 * 40 * 1000)
+        self.edges_colors_vbo = self.ctx.buffer(reserve=4 * 40 * 1000)
         # 4 bytes, 4 verts per line, 40 walkers, 1000 iterations
         self.rings_ibo = self.ctx.buffer(reserve=4 * 4 * 40 * 1000)
+        self.edges_ibo = self.ctx.buffer(reserve=4 * 4 * 40 * 1000)
 
         #                  VAOs structure
         # +-----------------------------------+-----------+
@@ -83,8 +100,15 @@ class Renderer:
             (self.pos_vbo,          '3f4', 'pos'),
             (self.rings_colors_vbo, '4f1', 'color'),
         )
+        edges_content = (
+            (self.pos_vbo,          '3f4', 'pos'),
+            (self.edges_colors_vbo, '4f1', 'color'),
+        )
         self.rings_vao = self.ctx.vertex_array(
             self.prog, rings_content, self.rings_ibo
+        )
+        self.edges_vao = self.ctx.vertex_array(
+            self.prog, edges_content, self.edges_ibo
         )
 
     def compute_vertex_buffers(self):
@@ -96,7 +120,13 @@ class Renderer:
         pos = pos.reshape(vertex_count, 3).astype('f4')
 
         # Compute vertex colors
-        rings_colors = self.rings_gradient.generate(vertex_count).astype('u1')
+        rings_colors = (self.params.rings_gradient
+            .generate(vertex_count)
+            .astype('u1')
+        )
+        edges_colors = np.tile(
+            self.params.edges_color, (vertex_count, 1)
+        ).astype('u1')
 
         # Compute vertex indexes
         rings_idx = []
@@ -104,13 +134,25 @@ class Renderer:
             verts_idx = list(chunk)
             # If the ring needs to be closed, a line must be drawn between its
             # first and last vertices
-            if self.close_rings:
+            if self.params.close_rings:
                 verts_idx.append(verts_idx[0])
             # Convert the list of current ring's vertices to a list with
             # adjacent segments to be used by GL_LINES_ADJACENCY
             rings_idx += adjacent_lines_indexes(verts_idx)
 
-        self.rings_idx = np.array(rings_idx, dtype='u4') # 0-65653
+        edges_idx = []
+        for i in range(walkers_count):
+            verts_idx = list(range(i, vertex_count, walkers_count))
+            # To actually draw a line segment, at leat two points are needed
+            if len(verts_idx) < 2:
+                # If one edge is too short, then all others are too
+                break
+            # Convert the list of current edge's vertices to a list with
+            # adjacent segments to be used by GL_LINES_ADJACENCY
+            edges_idx += adjacent_lines_indexes(verts_idx)
+
+        rings_idx = np.array(rings_idx, dtype='u4')
+        edges_idx = np.array(edges_idx, dtype='u4')
 
         # Write data to VBOs and IBOs
         self.pos_vbo.clear()
@@ -118,15 +160,19 @@ class Renderer:
 
         self.rings_colors_vbo.clear()
         self.rings_colors_vbo.write(rings_colors)
+        self.edges_colors_vbo.clear()
+        self.edges_colors_vbo.write(edges_colors)
 
         self.rings_ibo.clear()
-        self.rings_ibo.write(self.rings_idx)
+        self.rings_ibo.write(rings_idx)
+        self.edges_ibo.clear()
+        self.edges_ibo.write(edges_idx)
 
         # Mark VBOs as updated
         self.needs_vbo_update = False
 
     def render_frame(self):
-        self.ctx.clear(*self.background_color, 0)
+        self.ctx.clear(*self.params.background_color_normalized, 0)
         self.ctx.enable(BLEND)
 
         width, height = self.screen.width, self.screen.height
@@ -137,9 +183,11 @@ class Renderer:
         self.prog['view'].write(self.view)
         self.prog['projection'].write(self.projection)
         self.prog['viewport'] = width, height
-        self.prog['width'] = 3.0
 
         if self.needs_vbo_update:
             self.compute_vertex_buffers()
 
+        self.prog['width'] = self.params.rings_width
         self.rings_vao.render(LINES_ADJACENCY)
+        self.prog['width'] = self.params.edges_width
+        self.edges_vao.render(LINES_ADJACENCY)

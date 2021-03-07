@@ -25,6 +25,11 @@ class ViewportInterface(QObject):
     def system(self):
         return self.viewport.system
 
+    @property
+    def ringsGradient(self):
+        """Interface directly presents Gradient as it is a mutable class."""
+        return self.viewport.params.rings_gradient
+
     @pyqtSlot()
     def reseedStartPos(self):
         self.system.start_pos_seed = perf_counter_ns()
@@ -79,8 +84,8 @@ class ViewportInterface(QObject):
 
     @pyqtSlot(QColor)
     def setBackgroundColor(self, color):
-        self.viewport.background_color = tuple(
-            getattr(color, c)() / 255 for c in ('red', 'green', 'blue')
+        self.viewport.params.background_color = tuple(
+            getattr(color, c)() for c in ('red', 'green', 'blue')
         )
 
     def updateStartPos(self):

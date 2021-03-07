@@ -239,7 +239,7 @@ class ViewParamsDock(ParamsDock):
         self.layout.addWidget(wdg)
 
         wdg = LabeledGradientWidget(
-            self.interface.viewport.rings_gradient, self, name="Rings gradient"
+            self.interface.ringsGradient, self, name="Rings gradient"
         )
         wdg.setStatusTip("Edit the gradient alongside the rings of the "
             "3D model.")
