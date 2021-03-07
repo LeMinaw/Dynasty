@@ -45,9 +45,11 @@ class RendererParams:
     # Set default value through factory as Gradient is a mutable class
     rings_gradient: Gradient = field(default_factory=lambda: BLACK_TO_RED)
     edges_color: RGBAColor = (0, 0, 0, 255)
+    show_rings: bool = True
+    show_edges: bool = True
+    close_rings: bool = True
     rings_width: float = 3
     edges_width: float = 5
-    close_rings: bool = True
 
     @property
     def background_color_normalized(self):
@@ -207,7 +209,10 @@ class Renderer:
         if self.needs_vbo_update:
             self.compute_vertex_buffers()
 
-        self.prog['width'] = self.params.rings_width
-        self.vaos.rings.render(LINES_ADJACENCY)
-        self.prog['width'] = self.params.edges_width
-        self.vaos.edges.render(LINES_ADJACENCY)
+        if self.params.show_rings:
+            self.prog['width'] = self.params.rings_width
+            self.vaos.rings.render(LINES_ADJACENCY)
+
+        if self.params.show_edges:
+            self.prog['width'] = self.params.edges_width
+            self.vaos.edges.render(LINES_ADJACENCY)
