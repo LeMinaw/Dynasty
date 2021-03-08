@@ -1,9 +1,10 @@
-import numpy as np
-from numpy.random import default_rng
+from collections import namedtuple
 from enum import Enum
 from dataclasses import dataclass
 from operator import attrgetter
 from time import perf_counter_ns
+import numpy as np
+from numpy.random import default_rng
 
 
 def rand_spread_array(shape, avg=0, var=1, rng=None):
@@ -41,6 +42,24 @@ class RelModel(Enum):
     ELECTRONIC = 3
 
 
+class SeedableRNG:
+    """Class that wraps a NumPy pseudo-random `Generator`, and provide utility
+    methods to restart or reseed it.
+    """
+    def __init__(self, seed=None):
+        self.seed = seed
+        self.generator = default_rng(seed)
+
+    def reseed(self, seed=None):
+        """Reseed the PRNG.\n
+        If no `seed` argument is given, the last seed will be used, hence the
+        PRNG will generate the same sequence of numbers again.
+        """
+        if seed is not None:
+            self.seed = seed
+        self.generator = default_rng(self.seed)
+
+
 @dataclass
 class SystemParameters:
     count: int = 3
@@ -52,26 +71,33 @@ class SystemParameters:
     iterations: int = 10
 
 
+SystemRNGs = namedtuple('RNGs', ('start_pos', 'rel_mask', 'rel_matrix'))
+
+
 class WalkerSystem:
     def __init__(self, params=SystemParameters()):
         self.params = params
 
         # Use perf_counter_ns for seeding, because time_ns precision is very
         # poor on some systems - Windows, not to name it
-        self.start_pos_seed = perf_counter_ns()
-        self.rel_mask_seed = perf_counter_ns() + 1
-        self.rel_matrix_seed = perf_counter_ns() + 2
+        self.rngs = SystemRNGs(
+            *(SeedableRNG(perf_counter_ns() + i) for i in range(3))
+        )
 
     def generate_start_pos(self):
-        rng = default_rng(self.start_pos_seed)
+        rng = self.rngs.start_pos
+        rng.reseed()
 
         # Start pos in ]-1, 1[
-        self.start_pos = rand_spread_array((self.params['count'], 3), rng=rng)
+        self.start_pos = rand_spread_array(
+            (self.params.count, 3), rng=rng.generator
+        )
 
     def generate_relation_mask(self):
         n, model = attrgetter('count', 'rel_model')(self.params)
 
-        rng = default_rng(self.rel_mask_seed)
+        rng = self.rngs.rel_mask
+        rng.reseed()
 
         if model == RelModel.ONE_TO_ONE:
             # One walker is in relation with another
@@ -80,7 +106,7 @@ class WalkerSystem:
         elif model == RelModel.SPARSE:
             # SPARSE is MANY_TO_MANY with only 25% of relations.
             # As the diagonal will be nulled, compensation is needed.
-            self.rel_mask = rng.random((n, n)) < (.25 + 1/n)
+            self.rel_mask = rng.generator.random((n, n)) < (.25 + 1/n)
 
         # TODO: Port this relation model
         # elif model == RelModel.ELECTRONIC:
@@ -98,9 +124,12 @@ class WalkerSystem:
     def generate_relation_matrix(self):
         n, avg, var = attrgetter('count', 'rel_avg', 'rel_var')(self.params)
 
-        rng = default_rng(self.rel_matrix_seed)
+        rng = self.rngs.rel_matrix
+        rng.reseed()
 
-        self.rel_matrix = rand_spread_array((n, n), avg, var, rng=rng)
+        self.rel_matrix = rand_spread_array(
+            (n, n), avg, var, rng=rng.generator
+        )
         self.rel_matrix *= self.rel_mask
 
     def compute_pos(self):

@@ -41,17 +41,17 @@ class ViewportInterface(QObject):
 
     @pyqtSlot()
     def reseedStartPos(self):
-        self.system.start_pos_seed = perf_counter_ns()
+        self.system.rngs.start_pos.reseed(perf_counter_ns())
         self.updateStartPos()
 
     @pyqtSlot()
     def reseedRelMask(self):
-        self.system.rel_mask_seed = perf_counter_ns()
+        self.system.rngs.rel_mask.reseed(perf_counter_ns())
         self.updateRelMask()
 
     @pyqtSlot()
     def reseedRelMatrix(self):
-        self.system.rel_matrix_seed = perf_counter_ns()
+        self.system.rngs.rel_matrix.reseed(perf_counter_ns())
         self.updateRelMatrix()
 
     @pyqtSlot(int)
