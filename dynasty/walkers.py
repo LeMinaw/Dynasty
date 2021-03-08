@@ -1,7 +1,8 @@
 import numpy as np
 from numpy.random import default_rng
 from enum import Enum
-from operator import itemgetter
+from dataclasses import dataclass
+from operator import attrgetter
 from time import perf_counter_ns
 
 
@@ -40,8 +41,19 @@ class RelModel(Enum):
     ELECTRONIC = 3
 
 
+@dataclass
+class SystemParameters:
+    count: int = 3
+    spread: float = 10
+    inter_law: InterLaw = InterLaw.POSITION
+    rel_model: RelModel = RelModel.ONE_TO_ONE
+    rel_avg: float = .1
+    rel_var: float = 0
+    iterations: int = 10
+
+
 class WalkerSystem:
-    def __init__(self, params={}):
+    def __init__(self, params=SystemParameters()):
         self.params = params
 
         # Use perf_counter_ns for seeding, because time_ns precision is very
@@ -57,7 +69,7 @@ class WalkerSystem:
         self.start_pos = rand_spread_array((self.params['count'], 3), rng=rng)
 
     def generate_relation_mask(self):
-        n, model = itemgetter('count', 'rel_model')(self.params)
+        n, model = attrgetter('count', 'rel_model')(self.params)
 
         rng = default_rng(self.rel_mask_seed)
 
@@ -84,7 +96,7 @@ class WalkerSystem:
         np.fill_diagonal(self.rel_mask, False)
 
     def generate_relation_matrix(self):
-        n, avg, var = itemgetter('count', 'rel_avg', 'rel_var')(self.params)
+        n, avg, var = attrgetter('count', 'rel_avg', 'rel_var')(self.params)
 
         rng = default_rng(self.rel_matrix_seed)
 
@@ -92,14 +104,14 @@ class WalkerSystem:
         self.rel_matrix *= self.rel_mask
 
     def compute_pos(self):
-        law = self.params['inter_law']
+        law = self.params.inter_law
         rels = self.rel_matrix
 
-        pos = self.start_pos * self.params['spread']
+        pos = self.start_pos * self.params.spread
         vel = np.zeros_like(pos)
 
         positions = []
-        for _ in range(self.params['iterations']):
+        for _ in range(self.params.iterations):
             positions.append(pos.copy())
 
             if law == InterLaw.POSITION:
@@ -137,15 +149,7 @@ class WalkerSystem:
 
 
 if __name__ == '__main__':
-    sys = WalkerSystem({
-        'count': 2,
-        'spread': 10,
-        'inter_law': InterLaw.POSITION,
-        'rel_model': RelModel.ONE_TO_ONE,
-        'rel_avg': .1,
-        'rel_var': 0,
-        'iterations': 10
-    })
+    sys = WalkerSystem()
     sys.generate_start_pos()
     print(sys.start_pos)
     sys.generate_relation_mask()

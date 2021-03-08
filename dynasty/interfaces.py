@@ -56,27 +56,27 @@ class ViewportInterface(QObject):
 
     @pyqtSlot(int)
     def setCount(self, x):
-        self.system.params['count'] = x
+        self.system.params.count = x
         self.updateStartPos()
 
     @pyqtSlot(float)
     def setSpread(self, x):
-        self.system.params['spread'] = x
+        self.system.params.spread = x
         self.updatePos()
 
     @pyqtSlot(float)
     def setRelAvg(self, x):
-        self.system.params['rel_avg'] = x
+        self.system.params.rel_avg = x
         self.updateRelMatrix()
 
     @pyqtSlot(float)
     def setRelVar(self, x):
-        self.system.params['rel_var'] = x
+        self.system.params.rel_var = x
         self.updateRelMatrix()
 
     @pyqtSlot(int)
     def setIterations(self, x):
-        self.system.params['iterations'] = x
+        self.system.params.iterations = x
         self.updatePos()
 
     @pyqtSlot(int)

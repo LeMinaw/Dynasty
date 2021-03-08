@@ -14,7 +14,7 @@ from dynasty import APP_DIR, __version__
 from dynasty.factory import (make_action, make_checkbox, make_button,
         make_slider)
 from dynasty.interfaces import ViewportInterface
-from dynasty.walkers import WalkerSystem, InterLaw, RelModel
+from dynasty.walkers import WalkerSystem
 from dynasty.widgets import (Viewport, LabeledColorWidget,
         LabeledGradientWidget)
 
@@ -35,17 +35,7 @@ class MainWindow(QMainWindow):
         self.setDockOptions(self.AnimatedDocks | self.VerticalTabs)
         self.statusBar().showMessage("Welcome to Dynasty!")
 
-        system = WalkerSystem({
-            'count': 6,
-            'spread': 10,
-            'inter_law': InterLaw.POSITION,
-            'rel_model': RelModel.ONE_TO_ONE,
-            'rel_avg': .02,
-            'rel_var': .03,
-            'iterations': 100
-        })
-
-        viewport = Viewport(system=system, parent=self)
+        viewport = Viewport(system=WalkerSystem(), parent=self)
         self.setCentralWidget(viewport)
 
         self.viewportInterface = ViewportInterface(
