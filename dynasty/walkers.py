@@ -1,3 +1,10 @@
+"""This module simulates trajectories of interacting particles in 3D space.\n
+Particles are called "Walkers", in reference to the fact at each iteration each
+particle is "walking" towards or away from others. Various mathematical
+interaction laws and relationship generation rules are provided, yielding very
+different simulation results.
+"""
+
 from collections import namedtuple
 from enum import Enum
 from dataclasses import dataclass
@@ -28,6 +35,9 @@ def diff_array(array):
 
 
 class InterLaw(Enum):
+    """Enumeration of interaction laws.\n
+    Impacts the mathematical formula binding walkers together.
+    """
     POSITION = 0
     VELOCITY = 1
     NEWTON_LINEAR = 2
@@ -36,6 +46,9 @@ class InterLaw(Enum):
 
 
 class RelModel(Enum):
+    """Enumeration of relation models.\n
+    Impacts relation mask generation.
+    """
     ONE_TO_ONE = 0
     SPARSE = 1
     MANY_TO_MANY = 2
@@ -83,6 +96,10 @@ class WalkerSystem:
         self.rngs = SystemRNGs(
             *(SeedableRNG(perf_counter_ns() + i) for i in range(3))
         )
+
+        # Those will be populated later by various computing methods
+        self.rel_mask, self.rel_matrix = None, None
+        self.start_pos, self.positions = None, None
 
     def generate_start_pos(self):
         rng = self.rngs.start_pos
