@@ -52,7 +52,6 @@ class RelModel(Enum):
     ONE_TO_ONE = 0
     SPARSE = 1
     MANY_TO_MANY = 2
-    ELECTRONIC = 3
 
 
 class SeedableRNG:
@@ -121,15 +120,10 @@ class WalkerSystem:
             self.rel_mask = np.roll(np.eye(n, dtype=bool), 1, axis=1)
 
         elif model == RelModel.SPARSE:
-            # SPARSE is MANY_TO_MANY with only 25% of relations.
-            # As the diagonal will be nulled, compensation is needed.
+            # SPARSE is MANY_TO_MANY with only 25% of relations
+            # As the diagonal will be nulled hereafter, a small density
+            # compensation is needed to maintain a final 25% probability
             self.rel_mask = rng.generator.random((n, n)) < (.25 + 1/n)
-
-        # TODO: Port this relation model
-        # elif model == RelModel.ELECTRONIC:
-        #     # Relation matrix as if each walker behaves as a +/- charged particule
-        #     loads = repeat(rand(rng, n), 1, n)
-        #     rel = -transpose(loads) .* loads
 
         else:
             # Each walker is in relation with all others
@@ -148,6 +142,11 @@ class WalkerSystem:
             (n, n), avg, var, rng=rng.generator
         )
         self.rel_matrix *= self.rel_mask
+
+        # TODO: Replacement to the removed ELECTRONIC interaction model:
+        # It might be interesting to have a global switch to make any relation
+        # matrix reciprocal (eg. by taking its upper triangle submatrix,
+        # transposing it, then overwriting the lower triangle)
 
     def compute_pos(self):
         law = self.params.inter_law
