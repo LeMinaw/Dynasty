@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle(f"Dynasty {__version__}")
-        self.resize(900, 600)
+        self.resize(1200, 600)
         self.setDockOptions(self.AnimatedDocks | self.VerticalTabs)
         self.statusBar().showMessage("Welcome to Dynasty!")
 
@@ -46,7 +46,7 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.LeftDockWidgetArea, simParamsDock)
 
         viewParamsDock = ViewParamsDock(self)
-        self.addDockWidget(Qt.LeftDockWidgetArea, viewParamsDock)
+        self.addDockWidget(Qt.RightDockWidgetArea, viewParamsDock)
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu("File")
