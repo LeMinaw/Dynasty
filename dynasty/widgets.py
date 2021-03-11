@@ -1,8 +1,15 @@
-import moderngl
-import numpy as np
+"""This module contains Qt widgets, such as custom widgets for OpenGL
+rendering or special data types, compound widgets for easy labeling, or slight
+variations of default Qt widgets.\n
+For consistency with Qt, this file uses camelCase for variables, instances and
+functions names.
+"""
+
 from typing import Union
 from time import perf_counter, strftime
-from PyQt5.QtCore import Qt, QTimer, QPoint, QRect, pyqtSlot, pyqtSignal
+import moderngl
+import numpy as np
+from PyQt5.QtCore import (Qt, QTimer, QPoint, QRect, QAbstractItemModel,
 from PyQt5.QtGui import (QSurfaceFormat, QImage, QPainter, QLinearGradient,
         QColor, QPen)
 from PyQt5.QtWidgets import (QGridLayout, QHBoxLayout, QVBoxLayout, QWidget, QOpenGLWidget,
