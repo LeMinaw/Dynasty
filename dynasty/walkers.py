@@ -13,6 +13,8 @@ from time import perf_counter_ns
 import numpy as np
 from numpy.random import default_rng
 
+from dynasty.utils import LabeledEnum
+
 
 def rand_spread_array(shape, avg=0, var=1, rng=None):
     """Generate a ndarray with given shape populated with random float
@@ -45,13 +47,13 @@ class InterLaw(Enum):
     CYCLICAL = 4
 
 
-class RelModel(Enum):
+class RelModel(LabeledEnum):
     """Enumeration of relation models.\n
     Impacts relation mask generation.
     """
-    ONE_TO_ONE = 0
-    SPARSE = 1
-    MANY_TO_MANY = 2
+    ONE_TO_ONE   = 0, "One to one"
+    SPARSE       = 1, "Sparse (25%)"
+    MANY_TO_MANY = 2, "Many to many"
 
 
 class SeedableRNG:
