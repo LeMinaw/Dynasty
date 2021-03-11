@@ -8,6 +8,7 @@ from time import perf_counter_ns
 from PyQt5.QtCore import QObject, pyqtSlot
 from PyQt5.QtGui import QColor
 
+from dynasty.walkers import RelModel
 from dynasty.widgets import Viewport
 
 
@@ -53,6 +54,12 @@ class ViewportInterface(QObject):
     def reseedRelMatrix(self):
         self.system.rngs.rel_matrix.reseed(perf_counter_ns())
         self.updateRelMatrix()
+
+    @pyqtSlot(int)
+    def setRelModel(self, x):
+        # pylint: disable = no-value-for-parameter
+        self.system.params.rel_model = RelModel(x)
+        self.updateRelMask()
 
     @pyqtSlot(int)
     def setCount(self, x):

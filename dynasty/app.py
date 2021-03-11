@@ -12,8 +12,9 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDockWidget,
 
 from dynasty import APP_DIR, __version__
 from dynasty.factory import (make_action, make_checkbox, make_button,
-        make_slider)
+        make_slider, make_combobox)
 from dynasty.interfaces import ViewportInterface
+from dynasty.models import REL_MODELS_MODEL
 from dynasty.walkers import WalkerSystem
 from dynasty.widgets import (Viewport, LabeledColorWidget,
         LabeledGradientWidget)
@@ -148,6 +149,15 @@ class SimParamsDock(ParamsDock):
             slots = [self.interface.reseedRelMatrix],
             hint = ("Randomize walkers relation matrix values. Only effective "
                 "when using a relation matrix involving random.")
+        ))
+
+        self.layout.addWidget(make_combobox(
+            name = "Relation matrix model",
+            parent = self,
+            model = REL_MODELS_MODEL,
+            slots = [self.interface.setRelModel],
+            hint = ("Define how many relations each walker has. This can be "
+                "seen as the density of the relation matrix mask.")
         ))
 
         self.layout.addWidget(make_slider(
