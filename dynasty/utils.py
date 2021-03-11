@@ -31,24 +31,25 @@ class LinearMapper:
         return (x - self.in_range[0]) * self.coef + self.out_range[0]
 
 
-class NamedEnum(Enum):
-    """This subclass of Enum allows specifing a name alltogether with the
+class LabeledEnum(Enum):
+    """This subclass of Enum allows specifing a label alltogether with the
     value of each enum entry.
 
     Example:
-        MyEnum(NamedEnum):
+        MyEnum(LabeledEnum):
             THING = 0, "A thing"
             OTHER_THING = 1, "Some other thing"
     """
-    def __new__(cls, value, _):
+    def __new__(cls, value, label):
         # Build a new entry and use the first argument as enumerated _value_
         entry = object.__new__(cls)
         entry._value_ = value
+        # Set the label attribute to the second argument
+        entry.label = label
         return entry
 
-    def __init__(self, _, name):
-        # On init, replace the _name_ magic attribute with the second argument
-        self._name_ = name
+    def __str__(self):
+        return str(self.label)
 
 
 def clamp(value: float, min_: float=0, max_: float=1) -> float:
