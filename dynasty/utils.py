@@ -2,6 +2,7 @@
 specific module of Dynasty.
 """
 
+from enum import Enum
 from itertools import islice, chain
 from typing import Iterable, Generator, Tuple
 
@@ -28,6 +29,26 @@ class LinearMapper:
 
     def __call__(self, x: float) -> float:
         return (x - self.in_range[0]) * self.coef + self.out_range[0]
+
+
+class NamedEnum(Enum):
+    """This subclass of Enum allows specifing a name alltogether with the
+    value of each enum entry.
+
+    Example:
+        MyEnum(NamedEnum):
+            THING = 0, "A thing"
+            OTHER_THING = 1, "Some other thing"
+    """
+    def __new__(cls, value, _):
+        # Build a new entry and use the first argument as enumerated _value_
+        entry = object.__new__(cls)
+        entry._value_ = value
+        return entry
+
+    def __init__(self, _, name):
+        # On init, replace the _name_ magic attribute with the second argument
+        self._name_ = name
 
 
 def clamp(value: float, min_: float=0, max_: float=1) -> float:
