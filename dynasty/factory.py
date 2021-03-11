@@ -5,9 +5,9 @@ widgets instanciation less verbose and error-prone.
 from __future__ import annotations
 from typing import Sequence, Callable
 from PyQt5.QtWidgets import QPushButton, QAction, QCheckBox
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject, QAbstractItemModel
 
-from dynasty.widgets import LabeledSlider, LabeledFloatSlider
+from dynasty.widgets import LabeledSlider, LabeledFloatSlider, LabeledComboBox
 
 
 def make_action(
@@ -78,6 +78,33 @@ def make_checkbox(
         cbx.stateChanged.connect(slot)
 
     cbx.setChecked(default)
+    if hint:
+        cbx.setStatusTip(hint)
+
+    return cbx
+
+
+def make_combobox(
+        name: str = '',
+        parent: QObject|None = None,
+        model: QAbstractItemModel|None = None,
+        slots: Sequence[Callable, ...] = (),
+        hint: str= ''
+    ):
+    """Make a `LabeledComboBox`.\n
+    Slots will be connected to the `currentIndexChanged` signal.
+    """
+    if parent is not None:
+        cbx = LabeledComboBox(name=name, parent=parent)
+    else:
+        cbx = LabeledComboBox(name=name)
+
+    if model is not None:
+        cbx.setModel(model)
+
+    for slot in slots:
+        cbx.currentIndexChanged.connect(slot)
+
     if hint:
         cbx.setStatusTip(hint)
 

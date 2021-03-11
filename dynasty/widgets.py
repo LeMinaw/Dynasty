@@ -10,10 +10,12 @@ from time import perf_counter, strftime
 import moderngl
 import numpy as np
 from PyQt5.QtCore import (Qt, QTimer, QPoint, QRect, QAbstractItemModel,
+        pyqtSlot, pyqtSignal)
 from PyQt5.QtGui import (QSurfaceFormat, QImage, QPainter, QLinearGradient,
         QColor, QPen)
-from PyQt5.QtWidgets import (QGridLayout, QHBoxLayout, QVBoxLayout, QWidget, QOpenGLWidget,
-        QLabel, QSlider, QColorDialog, QSpinBox, qDrawShadePanel)
+from PyQt5.QtWidgets import (QGridLayout, QHBoxLayout, QVBoxLayout, QWidget,
+        QOpenGLWidget, QLabel, QSlider, QComboBox, QColorDialog, QSpinBox,
+        qDrawShadePanel)
 
 from dynasty.colors import Color, Gradient
 from dynasty.geometry import rotation, translation
@@ -306,6 +308,31 @@ class LabeledFloatSlider(AbstractLabeledSlider):
         sld = FloatSlider(Qt.Horizontal, start=start, end=end, factor=factor)
 
         super().__init__(*args, name=name, slider=sld, **kwargs)
+
+
+class LabeledComboBox(QWidget):
+    """Compound Qt widget embedding a combo box and a name label."""
+    currentIndexChanged = pyqtSignal(int)
+
+    def __init__(self, *args, name: str='', **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.comboBox = QComboBox(self)
+        self.label = QLabel(name, self)
+
+        lay = QVBoxLayout()
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.addWidget(self.label)
+        lay.addWidget(self.comboBox)
+        self.setLayout(lay)
+        self.setMaximumHeight(50)
+
+        self.comboBox.currentIndexChanged.connect(
+            self.currentIndexChanged.emit
+        )
+
+    def setModel(self, model: QAbstractItemModel):
+        self.comboBox.setModel(model)
 
 
 class ColorAlphaPicker(QWidget):
