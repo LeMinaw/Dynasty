@@ -1,3 +1,7 @@
+"""General purpose utility classes and functions, too generic to be part of a
+specific module of Dynasty.
+"""
+
 from itertools import islice, chain
 from typing import Iterable, Generator, Tuple
 
@@ -22,7 +26,7 @@ class LinearMapper:
             / (self.in_range[1] - self.in_range[0])
         )
 
-    def __call__(self, x: float):
+    def __call__(self, x: float) -> float:
         return (x - self.in_range[0]) * self.coef + self.out_range[0]
 
 
