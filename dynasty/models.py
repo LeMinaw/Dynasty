@@ -7,7 +7,7 @@ functions names.
 from enum import Enum
 from PyQt5.QtCore import Qt, QAbstractListModel
 
-from dynasty.walkers import RelModel
+from dynasty.walkers import RelModel, InterLaw
 
 
 class EnumModel(QAbstractListModel):
@@ -30,3 +30,5 @@ class EnumModel(QAbstractListModel):
 
 
 REL_MODELS_MODEL = EnumModel(RelModel)
+
+INTER_LAWS_MODEL = EnumModel(InterLaw)

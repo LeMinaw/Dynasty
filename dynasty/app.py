@@ -14,7 +14,7 @@ from dynasty import APP_DIR, __version__
 from dynasty.factory import (make_action, make_checkbox, make_button,
         make_slider, make_combobox)
 from dynasty.interfaces import ViewportInterface
-from dynasty.models import REL_MODELS_MODEL
+from dynasty.models import REL_MODELS_MODEL, INTER_LAWS_MODEL
 from dynasty.walkers import WalkerSystem
 from dynasty.widgets import (Viewport, LabeledColorWidget,
         LabeledGradientWidget)
@@ -158,6 +158,14 @@ class SimParamsDock(ParamsDock):
             slots = [self.interface.setRelModel],
             hint = ("Define how many relations each walker has. This can be "
                 "seen as the density of the relation matrix mask.")
+        ))
+        self.layout.addWidget(make_combobox(
+            name = "Interaction law",
+            parent = self,
+            model = INTER_LAWS_MODEL,
+            slots = [self.interface.setInterLaw],
+            hint = ("Mathematical law describing how walkers are bound "
+                "together.")
         ))
 
         self.layout.addWidget(make_slider(

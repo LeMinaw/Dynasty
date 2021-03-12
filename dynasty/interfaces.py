@@ -8,7 +8,7 @@ from time import perf_counter_ns
 from PyQt5.QtCore import QObject, pyqtSlot
 from PyQt5.QtGui import QColor
 
-from dynasty.walkers import RelModel
+from dynasty.walkers import RelModel, InterLaw
 from dynasty.widgets import Viewport
 
 
@@ -60,6 +60,12 @@ class ViewportInterface(QObject):
         # pylint: disable = no-value-for-parameter
         self.system.params.rel_model = RelModel(x)
         self.updateRelMask()
+
+    @pyqtSlot(int)
+    def setInterLaw(self, x):
+        # pylint: disable = no-value-for-parameter
+        self.system.params.inter_law = InterLaw(x)
+        self.updatePos()
 
     @pyqtSlot(int)
     def setCount(self, x):
