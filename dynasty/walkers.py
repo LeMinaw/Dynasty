@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from operator import attrgetter
 from time import perf_counter_ns
 import numpy as np
+import numpy.linalg as la
 from numpy.random import default_rng
 
 from dynasty.utils import LabeledEnum
@@ -185,17 +186,24 @@ class WalkerSystem:
                 # walkers positions, shape is therefore (n, n, 3).
                 forces = diff_array(pos)
 
-                # TODO: Port an test those laws
-                # if law in (InterLaw.NEWTON_LINEAR, InterLaw.NEWTON):
-                #     # Newton's and Coulomb's forces norms are of form k/d².
-                #     # newtonlinear is variation of form k/d
-                #     # normalize(f) returns a direction vector of norm 1, while
-                #     # norm.(f).^pow is the norm of the new force vector.
-                #     exp = -2 if law == InterLaw.NEWTON else -1
-                #     forces = 10**4 * normalize(forces) * norm(forces) ** exp
-                #     np.fill_diagonal(forces, 0)
+                if law in (InterLaw.NEWTON_LINEAR, InterLaw.NEWTON):
+                    # Newton's and Coulomb's forces norms are of form f=k/d².
+                    # NEWTON_LINEAR is a variation of form f=k/d.
+                    deg = 2 if law == InterLaw.NEWTON else 1
+                    # Those are the norms of the distances matrix, broadcasted
+                    # in shape (n, n, 1).
+                    norms = la.norm(forces, axis=2)[..., None]
+                    # Compute forces according to the chosen degree. Increase
+                    # the denominator degree by one in order to normalize
+                    # initial distance vectors.
+                    forces *= 10**4 / norms ** (deg+1)
+                    # Last computation yields NaN on the diagonal (as the
+                    # distance between a point an itself is null, a walker is
+                    # "infinitely attracted" by itself). This replaces those
+                    # NaN values by zeros to avoid "polluting" other arrays.
+                    np.nan_to_num(forces, copy=False)
 
-                # Forces X, Y, Z components are modulated by walkers relations
+                # Forces X, Y, Z components are modulated by walkers relations.
                 forces *= rels[..., None]
                 # Instant velocity is then incremented by the resulting
                 # acceleration.
