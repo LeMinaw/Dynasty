@@ -81,6 +81,12 @@ class Renderer:
 
         self.needs_vbo_update = True
 
+    @property
+    def projection(self):
+        aspect = self.screen.width / self.screen.height
+
+        return persp_projection(fov=40, aspect=aspect, far=10**4)
+
     def initialize_program(self):
         with (APP_DIR / 'lines.vs.glsl').open() as prog_file:
             vs_prog = prog_file.read()
@@ -201,14 +207,10 @@ class Renderer:
         self.ctx.clear(*self.params.background_color_normalized, 0)
         self.ctx.enable(BLEND)
 
-        width, height = self.screen.width, self.screen.height
-
-        self.projection = persp_projection(fov=40, aspect=width/height)
-
         self.prog['model'].write(self.model)
         self.prog['view'].write(self.view)
         self.prog['projection'].write(self.projection)
-        self.prog['viewport'] = width, height
+        self.prog['viewport'] = self.screen.width, self.screen.height
 
         if self.needs_vbo_update:
             self.compute_vertex_buffers()
