@@ -173,17 +173,18 @@ class WalkerSystem:
                 # A specific part of the distance between a walker and the
                 # others will be added to its position.
                 pos += rels @ pos - np.einsum('ij,iz->iz', rels, pos)
-                # pos += rels @ pos - np.sum(rels @ pos, axis=0)
-                # pos += (rels @ pos) - np.sum(rels * pos, axis=0)
 
-
-            elif law == InterLaw.CYCLICAL:
-                # Alg that does not uses attraction directly but variances
-                # between attraction values as position modulation.
-                pos += rels @ pos - (pos.T @ rels).T
+            # TODO: Test this law
+            # elif law == InterLaw.CYCLICAL:
+            #     # Alg that does not uses attraction directly but variances
+            #     # between attraction values as position modulation.
+            #     pos += rels @ pos - (pos.T @ rels).T
 
             else:
-                forces = diff_array(pos) # Distance between all walkers locations
+                # Those are the X, Y, Z components of differences between all
+                # walkers positions, shape is therefore (n, n, 3).
+                forces = diff_array(pos)
+
                 # TODO: Port an test those laws
                 # if law in (InterLaw.NEWTON_LINEAR, InterLaw.NEWTON):
                 #     # Newton's and Coulomb's forces norms are of form k/d².
@@ -194,10 +195,12 @@ class WalkerSystem:
                 #     forces = 10**4 * normalize(forces) * norm(forces) ** exp
                 #     np.fill_diagonal(forces, 0)
 
-                # Forces are modulated by walkers relations, then instant velocity
-                # is incremented by the resulting acceleration. Position is then
-                # incremented by instant velocity.
-                vel += np.sum(.1 * rels * forces, axis=1)
+                # Forces X, Y, Z components are modulated by walkers relations
+                forces *= rels[..., None]
+                # Instant velocity is then incremented by the resulting
+                # acceleration.
+                vel += np.sum(.1 * forces, axis=1)
+                # Finally, position is then incremented by instant velocity.
                 pos += vel
 
         self.positions = np.array(positions)
