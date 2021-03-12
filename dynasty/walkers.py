@@ -6,7 +6,6 @@ different simulation results.
 """
 
 from collections import namedtuple
-from enum import Enum
 from dataclasses import dataclass
 from operator import attrgetter
 from time import perf_counter_ns
@@ -36,15 +35,15 @@ def diff_array(array):
     return tile - tile.T
 
 
-class InterLaw(Enum):
+class InterLaw(LabeledEnum):
     """Enumeration of interaction laws.\n
     Impacts the mathematical formula binding walkers together.
     """
-    POSITION = 0
-    VELOCITY = 1
-    NEWTON_LINEAR = 2
-    NEWTON = 3
-    CYCLICAL = 4
+    POSITION = 0, "Distance fraction"
+    VELOCITY = 1, "Velocity"
+    NEWTON_LINEAR = 2, "Newton's (linear)"
+    NEWTON = 3, "Newton's (quadratic)"
+    # CYCLICAL = 4, "Cyclical"
 
 
 class RelModel(LabeledEnum):
