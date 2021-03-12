@@ -23,16 +23,25 @@ def rand_spread_array(shape, avg=0, var=1, rng=None):
     return var * (2*rng.random(shape) - 1) + avg
 
 
-def diff_array(array):
-    """Returns a square matrix of all differences of an array's elements.
+def repeat_newaxis(array, n):
+    """Repeat the given `array` `n` times along a new outer axis."""
+    return np.repeat(array[None, ...], n, axis=0)
 
-    Example: diffs([a; b; c]) ->
-    a-a b-a c-a
-    a-b b-b c-b
-    a-c b-c c-c
+
+def diff_array(array):
+    """Returns a square matrix of all differences of an array's elements.\n
+    This function supports arbitrary shapes (for exemple, (n, 3) if the input
+    array represents multiple points in 3D space).
+
+    Example: diff_array([a, b, c]) ->
+        a-a b-a c-a
+        a-b b-b c-b
+        a-c b-c c-c
     """
-    tile = np.tile(array, np.size(array, axis=0))
-    return tile - tile.T
+    tiled = repeat_newaxis(array, array.shape[0])
+    # Swap the two first axis (this is equivalent to transposition when input
+    # array has one dimention), and return the element-wie difference
+    return tiled - tiled.swapaxes(0, 1)
 
 
 class InterLaw(LabeledEnum):
