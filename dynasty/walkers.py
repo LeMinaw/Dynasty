@@ -91,6 +91,7 @@ class SystemParameters:
     rel_model: RelModel = RelModel.ONE_TO_ONE
     rel_avg: float = .1
     rel_var: float = 0
+    rel_sym: bool = False
     iterations: int = 10
 
 
@@ -144,7 +145,9 @@ class WalkerSystem:
         np.fill_diagonal(self.rel_mask, False)
 
     def generate_relation_matrix(self):
-        n, avg, var = attrgetter('count', 'rel_avg', 'rel_var')(self.params)
+        n, avg, var, sym = attrgetter(
+            'count', 'rel_avg', 'rel_var', 'rel_sym'
+        )(self.params)
 
         rng = self.rngs.rel_matrix
         rng.reseed()
@@ -154,10 +157,11 @@ class WalkerSystem:
         )
         self.rel_matrix *= self.rel_mask
 
-        # TODO: Replacement to the removed ELECTRONIC interaction model:
-        # It might be interesting to have a global switch to make any relation
-        # matrix reciprocal (eg. by taking its upper triangle submatrix,
-        # transposing it, then overwriting the lower triangle)
+        if sym:
+            # Make the relation matrix reciprocal by replicating the upper
+            # triangle of the generated matrix to the lower one
+            tri = np.triu(self.rel_matrix)
+            self.rel_matrix = tri + tri.T
 
     def compute_pos(self):
         law = self.params.inter_law
