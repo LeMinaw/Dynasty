@@ -53,7 +53,7 @@ class InterLaw(LabeledEnum):
     VELOCITY      = 1, "Velocity"
     NEWTON_LINEAR = 2, "Newton's (linear variant)"
     NEWTON        = 3, "Newton's (quadratic)"
-    ASYMETRY      = 4, "Asymetry"
+    ASYMMETRY      = 4, "Asymmetry"
 
 
 class RelModel(LabeledEnum):
@@ -180,9 +180,9 @@ class WalkerSystem:
                 # components indexes.
                 pos += rels @ pos - np.einsum('ij,ix->ix', rels, pos)
 
-            elif law == InterLaw.ASYMETRY:
+            elif law == InterLaw.ASYMMETRY:
                 # This relation law does not mimic a know, real world model.
-                # It uses asymetries between upper and lower triangles of the
+                # It uses asymmetries between upper and lower triangles of the
                 # relation matrix as a modulation of the position increment,
                 # thus yielding interesting coupling between walkers.
                 pos += rels @ pos - (pos.T @ rels).T
