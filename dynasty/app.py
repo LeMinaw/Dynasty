@@ -152,6 +152,14 @@ class SimParamsDock(ParamsDock):
         ))
 
         self.layout.addWidget(make_combobox(
+            name = "Interaction law",
+            parent = self,
+            model = INTER_LAWS_MODEL,
+            slots = [self.interface.setInterLaw],
+            hint = ("Mathematical law describing how walkers are bound "
+                "together.")
+        ))
+        self.layout.addWidget(make_combobox(
             name = "Relation matrix model",
             parent = self,
             model = REL_MODELS_MODEL,
@@ -159,13 +167,12 @@ class SimParamsDock(ParamsDock):
             hint = ("Define how many relations each walker has. This can be "
                 "seen as the density of the relation matrix mask.")
         ))
-        self.layout.addWidget(make_combobox(
-            name = "Interaction law",
+        self.layout.addWidget(make_checkbox(
+            name = "Reciprocal relations",
             parent = self,
-            model = INTER_LAWS_MODEL,
-            slots = [self.interface.setInterLaw],
-            hint = ("Mathematical law describing how walkers are bound "
-                "together.")
+            slots = [self.interface.setRelSym],
+            hint = ("Make all walkers relations reciprocal by symmetrising "
+                "the relation matrix.")
         ))
 
         self.layout.addWidget(make_slider(

@@ -56,16 +56,21 @@ class ViewportInterface(QObject):
         self.updateRelMatrix()
 
     @pyqtSlot(int)
+    def setInterLaw(self, x):
+        # pylint: disable = no-value-for-parameter
+        self.system.params.inter_law = InterLaw(x)
+        self.updatePos()
+
+    @pyqtSlot(int)
     def setRelModel(self, x):
         # pylint: disable = no-value-for-parameter
         self.system.params.rel_model = RelModel(x)
         self.updateRelMask()
 
     @pyqtSlot(int)
-    def setInterLaw(self, x):
-        # pylint: disable = no-value-for-parameter
-        self.system.params.inter_law = InterLaw(x)
-        self.updatePos()
+    def setRelSym(self, x):
+        self.system.params.rel_sym = bool(x)
+        self.updateRelMatrix()
 
     @pyqtSlot(int)
     def setCount(self, x):
