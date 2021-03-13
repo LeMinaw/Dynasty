@@ -49,11 +49,11 @@ class InterLaw(LabeledEnum):
     """Enumeration of interaction laws.\n
     Impacts the mathematical formula binding walkers together.
     """
-    POSITION = 0, "Distance fraction"
-    VELOCITY = 1, "Velocity"
-    NEWTON_LINEAR = 2, "Newton's (linear)"
-    NEWTON = 3, "Newton's (quadratic)"
-    # CYCLICAL = 4, "Cyclical"
+    POSITION      = 0, "Distance fraction"
+    VELOCITY      = 1, "Velocity"
+    NEWTON_LINEAR = 2, "Newton's (linear variant)"
+    NEWTON        = 3, "Newton's (quadratic)"
+    ASYMETRY      = 4, "Asymetry"
 
 
 class RelModel(LabeledEnum):
@@ -172,14 +172,16 @@ class WalkerSystem:
 
             if law == InterLaw.POSITION:
                 # A specific part of the distance between a walker and the
-                # others will be added to its position.
-                pos += rels @ pos - np.einsum('ij,iz->iz', rels, pos)
+                # others will be added to its position. 'x' denotes X, Y, Z
+                # components indexes.
+                pos += rels @ pos - np.einsum('ij,ix->ix', rels, pos)
 
-            # TODO: Test this law
-            # elif law == InterLaw.CYCLICAL:
-            #     # Alg that does not uses attraction directly but variances
-            #     # between attraction values as position modulation.
-            #     pos += rels @ pos - (pos.T @ rels).T
+            elif law == InterLaw.ASYMETRY:
+                # This relation law does not mimic a know, real world model.
+                # It uses asymetries between upper and lower triangles of the
+                # relation matrix as a modulation of the position increment,
+                # thus yielding interesting coupling between walkers.
+                pos += rels @ pos - (pos.T @ rels).T
 
             else:
                 # Those are the X, Y, Z components of differences between all
