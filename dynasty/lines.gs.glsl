@@ -31,6 +31,10 @@ float to_z_depth(vec4 pos) {
     return pos.z / pos.w;
 }
 
+vec2 normal(vec2 vec) {
+    return vec2(-vec.y, vec.x);
+}
+
 void draw_segment(vec2 positions[4], vec4 colors[4], float z_dephts[4]) {
     vec2 p0 = positions[0];
     vec2 p1 = positions[1];
@@ -50,9 +54,9 @@ void draw_segment(vec2 positions[4], vec4 colors[4], float z_dephts[4]) {
     vec2 v2 = normalize(p3 - p2);
 
     /* determine the normal of each of the 3 segments (previous, current, next) */
-    vec2 n0 = vec2(-v0.y, v0.x);
-    vec2 n1 = vec2(-v1.y, v1.x);
-    vec2 n2 = vec2(-v2.y, v2.x);
+    vec2 n0 = normal(v0);
+    vec2 n1 = normal(v1);
+    vec2 n2 = normal(v2);
 
     /* determine miter lines by averaging the normals of the 2 segments */
     vec2 miter_a = normalize(n0 + n1);	// miter at start of current segment
