@@ -32,14 +32,23 @@ float to_z_depth(vec4 pos) {
     return pos.z / pos.w;
 }
 
-vec2 normal(vec2 vec) {
-    return vec2(-vec.y, vec.x);
+vec2 normal(vec2 v) {
+    return vec2(-v.y, v.x);
 }
 
-void emit_vertex(vec2 pos, vec2 offset, float z_depht, vec4 color) {
+float length2(vec2 v) {
+    return pow(v.x, 2) + pow(v.y, 2);
+}
+
+vec2 projected(vec2 v1, vec2 v2) {
+    // v1 projected on v2
+    return v2 * dot(v2, v1) / length2(v2);
+}
+
+void emit_vertex(vec2 pos, vec2 center, float z_depht, vec4 color) {
     vertex_out.color = color;
-    vertex_out.center = pos / viewport;
-    gl_Position = vec4((pos + offset) / viewport, z_depht, 1.0);
+    vertex_out.center = center / viewport;
+    gl_Position = vec4(pos / viewport, z_depht, 1.0);
     EmitVertex();
 }
 
@@ -78,6 +87,9 @@ void draw_segment(vec2 positions[4], vec4 colors[4], float z_dephts[4]) {
     float length_a = width / an1;
     float length_b = width / bn1;
 
+    vec2 offset;
+    vec2 offset_proj;
+
     /* prevent excessively long miters at sharp corners */
     if (dot(v0, v1) < 0) {
         miter_a = n1;
@@ -85,16 +97,25 @@ void draw_segment(vec2 positions[4], vec4 colors[4], float z_dephts[4]) {
 
         /* close the gap */
         if (dot(v0, n1) > 0) {
-            emit_vertex(p1, width * n0, z_dephts[1], colors[1]);
-            emit_vertex(p1, width * n1, z_dephts[1], colors[1]);
+            offset = width * n0;
+            offset_proj = projected(offset, v1);
+            emit_vertex(p1+offset, p1+offset_proj, z_dephts[1], colors[1]);
+            
+            offset = width * n1;
+            offset_proj = projected(offset, v1);
+            emit_vertex(p1+offset, p1+offset_proj, z_dephts[1], colors[1]);
         }
         else {
-            emit_vertex(p1, -width * n1, z_dephts[1], colors[1]);
-            emit_vertex(p1, -width * n0, z_dephts[1], colors[1]);
+            offset = -width * n1;
+            offset_proj = projected(offset, v1);
+            emit_vertex(p1+offset, p1+offset_proj, z_dephts[1], colors[1]);
+
+            offset = -width * n0;
+            offset_proj = projected(offset, v1);
+            emit_vertex(p1+offset, p1+offset_proj, z_dephts[1], colors[1]);
         }
 
-        emit_vertex(p1, vec2(0, 0), z_dephts[1], colors[1]);
-        // EndPrimitive();
+        emit_vertex(p1, p1, z_dephts[1], colors[1]);
     }
 
     if (dot(v1, v2) < 0) {
@@ -102,10 +123,22 @@ void draw_segment(vec2 positions[4], vec4 colors[4], float z_dephts[4]) {
         length_b = width;
     }
     // generate the triangle strip
-    emit_vertex(p1,  length_a * miter_a, z_dephts[1], colors[1]);
-    emit_vertex(p1, -length_a * miter_a, z_dephts[1], colors[1]);
-    emit_vertex(p2,  length_b * miter_b, z_dephts[2], colors[2]);
-    emit_vertex(p2, -length_b * miter_b, z_dephts[2], colors[2]);
+    offset = length_a * miter_a;
+    offset_proj = projected(offset, v1);
+    emit_vertex(p1+offset, p1+offset_proj, z_dephts[1], colors[1]);
+
+    offset = -length_a * miter_a;
+    offset_proj = projected(offset, v1);
+    emit_vertex(p1+offset, p1+offset_proj, z_dephts[1], colors[1]);
+
+    offset = length_b * miter_b;
+    offset_proj = projected(offset, v1);
+    emit_vertex(p2+offset, p2+offset_proj, z_dephts[2], colors[2]);
+
+    offset = -length_b * miter_b;
+    offset_proj = projected(offset, v1);
+    emit_vertex(p2+offset, p2+offset_proj, z_dephts[2], colors[2]);
+
     EndPrimitive();
 }
 
