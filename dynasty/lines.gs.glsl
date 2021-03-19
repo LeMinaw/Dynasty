@@ -20,6 +20,7 @@ in VertexData {
 
 out VertexData {
     vec4 color;
+    vec2 center;
 } vertex_out;
 
 
@@ -33,6 +34,13 @@ float to_z_depth(vec4 pos) {
 
 vec2 normal(vec2 vec) {
     return vec2(-vec.y, vec.x);
+}
+
+void emit_vertex(vec2 pos, vec2 offset, float z_depht, vec4 color) {
+    vertex_out.color = color;
+    vertex_out.center = pos / viewport;
+    gl_Position = vec4((pos + offset) / viewport, z_depht, 1.0);
+    EmitVertex();
 }
 
 void draw_segment(vec2 positions[4], vec4 colors[4], float z_dephts[4]) {
@@ -77,29 +85,16 @@ void draw_segment(vec2 positions[4], vec4 colors[4], float z_dephts[4]) {
 
         /* close the gap */
         if (dot(v0, n1) > 0) {
-            vertex_out.color = colors[1];
-            gl_Position = vec4((p1 + width*n0) / viewport, z_dephts[1], 1.0);
-            EmitVertex();
-
-            vertex_out.color = colors[1];
-            gl_Position = vec4((p1 + width*n1) / viewport, z_dephts[1], 1.0);
-            EmitVertex();
+            emit_vertex(p1, width * n0, z_dephts[1], colors[1]);
+            emit_vertex(p1, width * n1, z_dephts[1], colors[1]);
         }
         else {
-            vertex_out.color = colors[1];
-            gl_Position = vec4((p1 - width*n1) / viewport, z_dephts[1], 1.0);
-            EmitVertex();
-
-            vertex_out.color = colors[1];
-            gl_Position = vec4((p1 - width*n0) / viewport, z_dephts[1], 1.0);
-            EmitVertex();
+            emit_vertex(p1, -width * n1, z_dephts[1], colors[1]);
+            emit_vertex(p1, -width * n0, z_dephts[1], colors[1]);
         }
 
-        vertex_out.color = colors[1];
-        gl_Position = vec4(p1 / viewport, z_dephts[1], 1.0);
-        EmitVertex();
-
-        EndPrimitive();
+        emit_vertex(p1, vec2(0, 0), z_dephts[1], colors[1]);
+        // EndPrimitive();
     }
 
     if (dot(v1, v2) < 0) {
@@ -107,22 +102,10 @@ void draw_segment(vec2 positions[4], vec4 colors[4], float z_dephts[4]) {
         length_b = width;
     }
     // generate the triangle strip
-    vertex_out.color = colors[1];
-    gl_Position = vec4((p1 + length_a*miter_a) / viewport, z_dephts[1], 1.0);
-    EmitVertex();
-
-    vertex_out.color = colors[1];
-    gl_Position = vec4((p1 - length_a*miter_a) / viewport, z_dephts[1], 1.0);
-    EmitVertex();
-
-    vertex_out.color = colors[2];
-    gl_Position = vec4((p2 + length_b*miter_b) / viewport, z_dephts[2], 1.0);
-    EmitVertex();
-
-    vertex_out.color = colors[2];
-    gl_Position = vec4((p2 - length_b*miter_b) / viewport, z_dephts[2], 1.0);
-    EmitVertex();
-
+    emit_vertex(p1,  length_a * miter_a, z_dephts[1], colors[1]);
+    emit_vertex(p1, -length_a * miter_a, z_dephts[1], colors[1]);
+    emit_vertex(p2,  length_b * miter_b, z_dephts[2], colors[2]);
+    emit_vertex(p2, -length_b * miter_b, z_dephts[2], colors[2]);
     EndPrimitive();
 }
 
@@ -130,16 +113,16 @@ void draw_segment(vec2 positions[4], vec4 colors[4], float z_dephts[4]) {
 void main(void) {
     // receive 4 verticies as input layout is GL_LINES_ADJACENCY
     vec2 screen_pos[4];
-    float z_depths[4];
+    float z_dephts[4];
     vec4 colors[4];
     
     for (int i = 0; i < 4; i++) {
         vec4 pos = gl_in[i].gl_Position;
 
         screen_pos[i] = to_screen_space(pos);
-        z_depths[i] = to_z_depth(pos);
+        z_dephts[i] = to_z_depth(pos);
         colors[i] = vertex_in[i].color;
     }
 
-    draw_segment(screen_pos, colors, z_depths);
+    draw_segment(screen_pos, colors, z_dephts);
 }
