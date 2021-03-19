@@ -96,7 +96,6 @@ class Viewport(ModernGLWidget, Renderer):
         fmt.setVersion(3, 3)
         fmt.setProfile(QSurfaceFormat.CoreProfile)
         # fmt.setDepthBufferSize(24)
-        fmt.setSamples(8) # MSAA
         self.setFormat(fmt)
 
         timer = QTimer(self)
