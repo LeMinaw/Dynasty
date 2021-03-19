@@ -24,9 +24,7 @@ void main(void) {
     float d = distance(ndc_to_screen(vertex_in.center), gl_FragCoord.xy); 
     float w = width / 2;
     
-    if (d > w) {
-        discard;
-    } else if (d > w-falloff) {
+    if (d > w-falloff) {
         color.a *= (d - w) / -falloff;
     }
 }
